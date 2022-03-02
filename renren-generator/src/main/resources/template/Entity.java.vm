@@ -1,0 +1,33 @@
+package ${package}.modules.${moduleName}.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import ${package}.common.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+#if(${hasBigDecimal})
+import java.math.BigDecimal;
+#end
+import java.util.Date;
+
+/**
+ * ${comments}
+ *
+ * @author ${author} ${email}
+ * @since ${version} ${date}
+ */
+@Data
+@EqualsAndHashCode(callSuper=false)
+@TableName("${tableName}")
+public class ${className}Entity extends BaseEntity {
+	private static final long serialVersionUID = 1L;
+
+#foreach ($column in $columns)
+#if($column.columnName != 'id' && $column.columnName != 'creator' && $column.columnName != 'create_date')
+    /**
+     * $column.comments
+     */
+	private $column.attrType $column.attrname;
+#end
+#end
+}

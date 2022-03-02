@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.activiti.dao.ProcessActivityDao">
+    <resultMap id="ProcessActivityEntity" type="io.renren.modules.activiti.entity.ProcessActivityEntity">
+        <result property="processDefinitionName" column="DEF_NAME"/>
+        <result property="processDefinitionVersion" column="DEF_VERSION_"/>
+        <result property="processInstanceId" column="PROC_INST_ID_"/>
+        <result property="businessKey" column="BUSINESS_KEY_"/>
+        <result property="startTime" column="START_TIME_"/>
+        <result property="endTime" column="END_TIME_"/>
+        <result property="startUserId" column="START_USER_ID_"/>
+        <result property="assignee" column="ASSIGNEE_"/>
+        <result property="processDefinitionId" column="PROC_DEF_ID_"/>
+    </resultMap>
+
+    <resultMap id="HistoryDetail" type="io.renren.modules.activiti.entity.HistoryDetailEntity">
+        <result property="processDefinitionId" column="PROC_DEF_ID_"/>
+        <result property="processInstanceId" column="PROC_INST_ID_"/>
+        <result property="startTime" column="START_TIME_"/>
+        <result property="endTime" column="END_TIME_"/>
+        <result property="assignee" column="ASSIGNEE_"/>
+        <result property="activityType" column="TYPE_"/>
+        <result property="id" column="ID_"/>
+        <result property="taskId" column="TASK_ID_"/>
+        <result property="comment" column="MESSAGE_"/>
+        <result property="executionId" column="EXECUTION_ID_"/>
+        <result property="activityName" column="NAME_"/>
+    </resultMap>
+
+    <select id="getMyProcessInstancePage" parameterType="map" resultMap="ProcessActivityEntity">
+        SELECT aht.*, arp.NAME_ as DEF_NAME, ahp.BUSINESS_KEY_, ahp.START_TIME_, ahp.END_TIME_,
+        ahp.START_USER_ID_, arp.VERSION_ as DEF_VERSION_
+        FROM (SELECT DISTINCT PROC_DEF_ID_, PROC_INST_ID_,ASSIGNEE_ FROM ACT_HI_TASKINST) aht
+        LEFT JOIN ACT_HI_PROCINST ahp on aht.PROC_INST_ID_ = ahp.PROC_INST_ID_
+        LEFT JOIN ACT_RE_PROCDEF arp on aht.PROC_DEF_ID_ = arp.ID_
+        WHERE aht.ASSIGNEE_ = #{userId}
+        <if test="processInstanceId != null">
+            and aht.PROC_INST_ID_ = #{processInstanceId}
+        </if>
+        <if test="businessKey != null">
+            and ahp.BUSINESS_KEY_ = #{businessKey}
+        </if>
+        <if test="startBeginTime != null">
+            and ahp.START_TIME_ >= #{startBeginTime}
+        </if>
+        <if test="startEndTime != null">
+            <![CDATA[and ahp.START_TIME_ <= #{startEndTime}]]>
+        </if>
+        <if test="finishedBeginTime != null">
+            and ahp.END_TIME_ >= #{finishedBeginTime}
+        </if>
+        <if test="finishedEndTime != null">
+            <![CDATA[and ahp.END_TIME_ <= #{finishedEndTime}]]>
+        </if>
+    </select>
+
+    <select id="getTaskHandleDetailInfo" resultMap="HistoryDetail">
+        SELECT ahc.ID_, ahc.TYPE_, aht.ID_ as TASK_ID_, aht.PROC_INST_ID_, ahc.MESSAGE_,
+        aht.PROC_DEF_ID_, aht.EXECUTION_ID_, aht.NAME_, aht.ASSIGNEE_, aht.START_TIME_,
+        aht.END_TIME_ from ACT_HI_TASKINST aht
+        left join ACT_HI_COMMENT ahc on ahc.TASK_ID_ = aht.ID_ and ahc.TYPE_ = 'comment'
+        where aht.PROC_INST_ID_ = #{processInstanceId}
+        and aht.end_time_ is not null
+        order by aht.START_TIME_ desc
+    </select>
+
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.spider.dao.OrderDao">
+
+    <resultMap type="io.renren.modules.spider.entity.OrderEntity" id="orderMap">
+        <result property="id" column="id"/>
+        <result property="from" column="from"/>
+        <result property="to" column="to"/>
+        <result property="equipment" column="equipment"/>
+        <result property="quantity" column="quantity"/>
+        <result property="orderSleepTime" column="orderSleepTime"/>
+        <result property="orderDate" column="orderDate"/>
+        <result property="isProxy" column="isProxy"/>
+        <result property="isNeedSupplierName" column="isNeedSupplierName"/>
+        <result property="isNeedLineName" column="isNeedLineName"/>
+        <result property="vessel" column="vessel"/>
+        <result property="voyage" column="voyage"/>
+        <result property="supplierName" column="supplierName"/>
+        <result property="account" column="account"/>
+        <result property="etd" column="etd"/>
+        <result property="reference" column="reference"/>
+    </resultMap>
+    <insert id="saveOrder">
+        INSERT INTO spider_order(`from`,`to`,equipment,quantity,orderSleepTime,orderDate,isProxy,isNeedSupplierName,isNeedLineName,vessel,voyage,supplierName,account,etd,reference) values (#{from},#{to},#{equipment},#{quantity},#{orderSleepTime},#{orderDate},#{isProxy},#{isNeedSupplierName},#{isNeedLineName},#{vessel},#{voyage},#{supplierName},#{account},#{etd},#{reference});
+    </insert>
+
+
+</mapper>

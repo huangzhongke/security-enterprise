@@ -1,0 +1,28 @@
+-- 菜单初始SQL
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date)VALUES (${id0}, 1067246875800000002, '${moduleName}/${pathName}', NULL, 0, 'icon-desktop', 0, 1067246875800000001, now(), 1067246875800000001, now());
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date) VALUES (${id1}, ${id0}, NULL, '${moduleName}:${pathName}:page,${moduleName}:${pathName}:info', 1, NULL, 0, 1067246875800000001, now(), 1067246875800000001, now());
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date) VALUES (${id2}, ${id0}, NULL, '${moduleName}:${pathName}:save', 1, NULL, 1, 1067246875800000001, now(), 1067246875800000001, now());
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date) VALUES (${id3}, ${id0}, NULL, '${moduleName}:${pathName}:update', 1, NULL, 2, 1067246875800000001, now(), 1067246875800000001, now());
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date) VALUES (${id4}, ${id0}, NULL, '${moduleName}:${pathName}:delete', 1, NULL, 3, 1067246875800000001, now(), 1067246875800000001, now());
+INSERT INTO sys_menu(id, pid, url, permissions, type, icon, sort, creator, create_date, updater, update_date) VALUES (${id5}, ${id0}, NULL, '${moduleName}:${pathName}:export', 1, NULL, 4, 1067246875800000001, now(), 1067246875800000001, now());
+
+
+-- 菜单国际化初始SQL
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id0}, 'name', '$!comments', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id0}, 'name', '$!comments', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id0}, 'name', '$!comments', 'zh-TW');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id1}, 'name', 'View', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id1}, 'name', '查看', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id1}, 'name', '查看', 'zh-TW');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id2}, 'name', 'Add', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id2}, 'name', '新增', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id2}, 'name', '新增', 'zh-TW');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id3}, 'name', 'Edit', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id3}, 'name', '修改', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id3}, 'name', '修改', 'zh-TW');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id4}, 'name', 'Delete', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id4}, 'name', '删除', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id4}, 'name', '刪除', 'zh-TW');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id5}, 'name', 'Export', 'en-US');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id5}, 'name', '导出', 'zh-CN');
+INSERT INTO sys_language(table_name, table_id, field_name, field_value, language) VALUES ('sys_menu', ${id5}, 'name', '導出', 'zh-TW');

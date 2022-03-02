@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.demo.dao.NewsDao">
+
+    <select id="getList" resultType="io.renren.modules.demo.entity.NewsEntity">
+        select * from tb_news where 1=1
+        <if test="title != null and title.trim() != ''">
+            and title like #{title}
+        </if>
+        <if test="startDate != null and startDate.trim() != ''">
+            and pub_date >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate.trim() != ''">
+            <![CDATA[and pub_date <= #{endDate}]]>
+        </if>
+    </select>
+
+</mapper>

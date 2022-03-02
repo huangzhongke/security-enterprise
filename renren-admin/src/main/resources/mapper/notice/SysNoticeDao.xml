@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.notice.dao.SysNoticeDao">
+
+    <!-- 获取被通知的用户列表 -->
+    <select id="getNoticeUserList" resultType="io.renren.modules.notice.entity.SysNoticeEntity">
+        select t2.real_name as receiver_name, t1.read_status, t1.read_date from sys_notice_user t1, sys_user t2
+        where t1.receiver_id = t2.id and t1.notice_id = #{id}
+    </select>
+
+    <!-- 获取我的通知列表 -->
+    <select id="getMyNoticeList" resultType="io.renren.modules.notice.entity.SysNoticeEntity">
+        select t2.id, t2.title, t2.type, t2.sender_name, t2.sender_date, t1.read_status from sys_notice_user t1, sys_notice t2
+        where t1.notice_id = t2.id and t1.receiver_id = #{receiverId} order by t2.create_date desc
+    </select>
+</mapper>

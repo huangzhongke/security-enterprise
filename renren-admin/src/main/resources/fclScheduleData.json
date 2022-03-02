@@ -1,0 +1,25 @@
+{
+  "fclQuoteRequest": {
+    "schedulesAfterDate": "2021-11-23",
+    "from": "NINGBO, ZHEJIANG",
+    "fromCountry": "CHINA",
+    "fromType": "Port",
+    "fromIata": "NGB",
+    "fromUNCode": "CNNGB",
+    "to": "WILMINGTON, NC",
+    "toCountry": "UNITED STATES",
+    "toType": "Port",
+    "toIata": "ILM",
+    "toUNCode": "USILM",
+    "fmc": true,
+    "customerStatus": "priceOwner",
+    "allowEmptyRates": false,
+    "currency": "USD",
+    "equipmentRequest": [
+      {
+        "equipment": "45G1",
+        "quantity": 1
+      }
+    ]
+  }
+}
