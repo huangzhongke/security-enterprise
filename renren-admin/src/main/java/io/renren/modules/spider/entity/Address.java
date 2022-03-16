@@ -24,6 +24,7 @@ public class Address {
     private String phone;
     private String singleLine;
     private String vatNo;
+    private String postCode;
 
     @Override
     public String toString() {
@@ -39,6 +40,7 @@ public class Address {
                 ", \"phone\":\"" + phone + '\"' +
                 ", \"singleLine\":\"" + singleLine + '\"' +
                 ", \"vatNo\":\"" + vatNo + '\"' +
+                ", \"postCode\":\"" + postCode + '\"' +
                 '}';
     }
 }

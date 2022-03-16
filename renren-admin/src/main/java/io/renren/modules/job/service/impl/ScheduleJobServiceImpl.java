@@ -71,8 +71,8 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.insert(entity);
 		Map<String, Object> tempMap = JSONObject.parseObject(entity.getParams());
-		Long id = Long.parseLong(tempMap.get("id").toString());
-		if(null != id){
+		if (tempMap.get("id") != null){
+			Long id = Long.parseLong(tempMap.get("id").toString());
 			Line line = lineService.selectById(id);
 			line.setJobId(entity.getId());
 			lineService.updateById(line);

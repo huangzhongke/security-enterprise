@@ -48,15 +48,15 @@ public class OrderEntity extends BaseEntity {
     /**
      * 是否使用代理
      */
-	private Integer isProxy;
+	private Boolean isProxy;
     /**
      * 是否指定航线代码
      */
-	private Integer isNeedSupplierName;
+	private Boolean isNeedSupplierName;
     /**
      * 是否指定航名航次
      */
-	private Integer isNeedLineName;
+	private Boolean isNeedLineName;
     /**
      * 航名
      */

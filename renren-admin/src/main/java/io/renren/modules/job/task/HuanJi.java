@@ -8,6 +8,7 @@ import io.renren.modules.job.service.ScheduleJobService;
 import io.renren.modules.spider.dao.OrderDao;
 import io.renren.modules.spider.entity.*;
 import io.renren.modules.spider.service.LineService;
+import io.renren.modules.spider.service.SpiderReferenceService;
 import io.renren.modules.spider.utils.HttpUtils;
 import io.renren.modules.spider.utils.MyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component("huanji")
 public class HuanJi implements ITask {
-    private List<String> references = new ArrayList<>();
+    private List<SpiderReference> references;
     private Integer etdDays;
     private Boolean isNeedLineName;
     private Boolean isNeedSupplierName;
@@ -46,7 +47,7 @@ public class HuanJi implements ITask {
     private Map<String, Object> notifyBookingAddress = new HashMap<>(); //通知人信息
     private Map<String, Object> brokerageAddress = new HashMap<>(); //货代人信息
     private Map<String, Object> bookedByAddress = new HashMap<>();
-    private Boolean isNeedBrokerAddress;
+
     private String messageText = ""; //发送邮箱信息正文
     private Port startPort;
     private Port endPort;
@@ -63,10 +64,14 @@ public class HuanJi implements ITask {
     @Autowired
     OrderDao orderDao;
     private FormParams formParams;
-    private int referenceIndex = 0;
     private Map<String, Object> paramsMap;
     private Line paramsLine;
+    private List<String> failedReferences = new ArrayList<>();
+    private List<String> successedReferences = new ArrayList<>();
 
+    private String tempReference;
+    @Autowired
+    private SpiderReferenceService spiderReferenceService;
     @Override
     public void run(String params) {
         paramsMap = JSONObject.parseObject(params);
@@ -81,6 +86,8 @@ public class HuanJi implements ITask {
             return;
         }
         try {
+            references = spiderReferenceService.getListByLineId(id);
+
             //初始化数据
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
             init();
@@ -88,12 +95,12 @@ public class HuanJi implements ITask {
             getToken();
             if (references.size() > 0) {
                 String showText = "总共" + references.size() + "个小提单号，当前时间：" + sdf.format(new Date()) + "查询的是【" + startPort.getMatched() + "-" + endPort.getMatched() + "】 type:" + equipment + " ETD间隔时间:" + etdDays;
-                if (isNeedLineName) {
+                if (formParams.getIsNeedLineName()) {
                     showText += "【航名】:" + vesselName + "【航次】:" + voyage;
                 } else {
                     showText += "未指定航名航次";
                 }
-                if (isNeedSupplierName) {
+                if (formParams.getIsNeedSupplierName()) {
                     showText += " 【航线代码】: " + supplierName;
                 } else {
                     showText += " 未指定航线代码 ";
@@ -102,55 +109,42 @@ public class HuanJi implements ITask {
                 Map<String, Object> fclScheduleWithRatesData = getFclScheduleWithRates();
                 if (null != fclScheduleWithRatesData) {
                     System.out.println("查询到所需的航线信息开始下单 " + sdf.format(new Date()));
-                    int successNum = 0;
-                    while (referenceIndex < references.size()) {
-                        String bookId = submitBookings(fclScheduleWithRatesData);
-                        if (bookId != null && !"error".equals(bookId)) {
-                            // 确定提交，修改状态
-                            updateStatus(bookId);
-                            int tempProxy = 0;
-                            int tempSupplierName = 0;
-                            int tempLineName = 0;
-                            if (isProxy){
-                                tempProxy = 0;
-                            }else {
-                                tempProxy = 1;
+                    getAddress();
+                    for (SpiderReference sr : references) {
+                        if (!sr.getUsed()){
+                            tempReference = sr.getReference();
+                            String bookId = submitBookings(fclScheduleWithRatesData);
+                            if (bookId != null && !"error".equals(bookId)) {
+                                // 确定提交，修改状态
+                                updateStatus(bookId);
+                                OrderEntity order = OrderEntity.builder()
+                                        .from(startPort.getMatched())
+                                        .to(endPort.getMatched())
+                                        .equipment(equipment)
+                                        .quantity(quantity)
+                                        .orderSleepTime(orderSleepTime)
+                                        .orderDate(new Date())
+                                        .isProxy(isProxy)
+                                        .isNeedLineName(isNeedLineName)
+                                        .isNeedSupplierName(isNeedSupplierName)
+                                        .vessel(vesselName)
+                                        .voyage(voyage)
+                                        .supplierName(supplierName)
+                                        .account(formParams.getAccount())
+                                        .etd(formParams.getEtdDays())
+                                        .reference(sr.getReference())
+                                        .build();
+                                orderDao.saveOrder(order);
+                                successedReferences.add(sr.getReference());
+                                sr.setUsed(true);
+                                spiderReferenceService.updateById(sr);
+                        }else if (bookId == null) {
+                                failedReferences.add(sr.getReference());
+                                sr.setUsed(true);
+                                spiderReferenceService.updateById(sr);
                             }
-                            if (isNeedSupplierName){
-                                tempSupplierName = 0;
-                            }else {
-                                tempSupplierName = 1;
-                            }
-                            if (isNeedLineName){
-                                tempLineName = 0;
-                            }else {
-                                tempLineName = 1;
-                            }
+                    }
 
-                            OrderEntity order = OrderEntity.builder()
-                                    .from(startPort.getMatched())
-                                    .to(endPort.getMatched())
-                                    .equipment(equipment)
-                                    .quantity(quantity)
-                                    .orderSleepTime(orderSleepTime)
-                                    .orderDate(new Date())
-                                    .isProxy(tempProxy)
-                                    .isNeedLineName(tempLineName)
-                                    .isNeedSupplierName(tempSupplierName)
-                                    .vessel(vesselName)
-                                    .voyage(voyage)
-                                    .supplierName(supplierName)
-                                    .account(formParams.getAccount())
-                                    .etd(formParams.getEtdDays())
-                                    .reference(references.get(referenceIndex))
-                                    .build();
-                            orderDao.saveOrder(order);
-                            referenceIndex++;
-                            successNum++;
-                        } else if (bookId == null) {
-//                    小提单号已存在
-                            referenceIndex++;
-                        }
                         TimeUnit.SECONDS.sleep(formParams.getOrderSleepTime());
                     }
                     //下完单吧下单状态修改为1
@@ -162,14 +156,14 @@ public class HuanJi implements ITask {
                     //同时修改定时任务的参数 和 Line的参数
                     scheduleJobService.updateById(scheduleJob);
                     lineService.updateById(paramsLine);
-                    sendMail(successNum);
+                    sendMail(successedReferences.size());
                 }
             }
 
         } catch (NullPointerException nullPointerException) {
 
         } catch (Exception e) {
-            sendErrorMail("程序出现异常了" + e, "程序停止了，请手动重新运行");
+            sendErrorMail("程序出现异常了" + e.getMessage(), "程序停止了，请手动重新运行");
         }
     }
 
@@ -207,32 +201,49 @@ public class HuanJi implements ITask {
             //可变参数，小提单号
             referencesTemp = JSONObject.parseObject(info.get("references").toString(), new TypeReference<List<Map<String, Object>>>() {
             });
-            referencesTemp.get(0).put("reference", references.get(referenceIndex));
+            referencesTemp.get(0).put("reference",tempReference);
         }
 
         info.put("references", referencesTemp);
-        info.put("customerReference", references.get(referenceIndex));
+        info.put("customerReference", tempReference);
 
         //可变参数，型号
         List<Map<String, Object>> bookingItems = JSONObject.parseObject(info.get("bookingItems").toString(), new TypeReference<List<Map<String, Object>>>() {
         });
-        bookingItems.get(0).put("containerType", equipment);
+        bookingItems.get(0).put("containerType", formParams.getEquipment());
 //        判断数量，是否大于1,一票多个高柜
         if (quantity > 1) {
             for (int i = 1; i < quantity; i++) {
-                bookingItems.add(bookingItems.get(0));
+                Map<String, Object> items = new HashMap<>();
+                items.putAll(bookingItems.get(0));
+                List<Map<String, Object>> bookingItemDetails = new ArrayList<>();
+                Map<String, Object> temp = new HashMap<>();
+                temp.put("commodityCode","940330");
+                temp.put("description","OFFICE FURNITURE, OF WOOD");
+                temp.put("distanceUnit","cms");
+                temp.put("valueCurrency","USD");
+                temp.put("volumeUnit","CubicMeters");
+                temp.put("weightUnit","KG");
+                bookingItemDetails.add(temp);
+                map.put("bookingItemDetails",bookingItemDetails);
+                bookingItems.add(items);
             }
         }
         info.put("bookingItems", bookingItems);
         info.put("bookingCosts", fclScheduleWithRatesData.get("bookingCosts"));
         info.put("logisticsDetails", fclScheduleWithRatesData.get("logisticsDetails"));
-        info.put("consignorBookingAddress", consignorBookingAddress);
-        info.put("bookedByAddress", bookedByAddress);
-        info.put("consigneeBookingAddress", consigneeBookingAddress);
-        info.put("notifyBookingAddress", notifyBookingAddress);
-        if (isNeedBrokerAddress) {
+        if(formParams.getIsNeedConsigneeAddress()){
+            info.put("consigneeBookingAddress", consigneeBookingAddress);
+        }
+        if (formParams.getIsNeedNotifyAddress()){
+            info.put("notifyBookingAddress", notifyBookingAddress);
+        }
+
+        if (formParams.getIsNeedBrokerageAddress()) {
             info.put("brokerageAddress", brokerageAddress);
         }
+        info.put("consignorBookingAddress", consignorBookingAddress);
+        info.put("bookedByAddress", bookedByAddress);
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("booking", info);
         return resultMap;
@@ -277,7 +288,7 @@ public class HuanJi implements ITask {
         params.put("Authorization", authorization);
 
 
-        messageText = "【从" + fclQuoteRequest.get("from") + "到" + fclQuoteRequest.get("to") + "的航线】";
+        messageText = "【从" + fclQuoteRequest.get("from") + "到" + fclQuoteRequest.get("to") + "的航线】 " + equipment;
 
 
         Map<String, Object> fclScheduleDataResultMap = new HashMap<>();
@@ -326,12 +337,12 @@ public class HuanJi implements ITask {
                             continue;
                         }
                     }
-                    if (isNeedSupplierName) {
+                    if (formParams.getIsNeedSupplierName()) {
                         if (!supplierName.equals(legs.get(0).get("supplierName").toString())) {
                             continue;
                         }
                     }
-                    if (isNeedLineName) {
+                    if (formParams.getIsNeedLineName()) {
                         if ((!vesselName.equals(legs.get(0).get("vesselName"))) && !(voyage.equals(legs.get(0).get("voyage")))) {
                             continue;
                         }
@@ -442,8 +453,7 @@ public class HuanJi implements ITask {
         consigneeAddress = formParams.getConsigneeAddress();
         Map<String, Object> fclScheduleDataResultMap = JSONObject.parseObject(MyUtils.readJsonFile("fclScheduleData.json"));
         fclQuoteRequest = JSONObject.parseObject(fclScheduleDataResultMap.get("fclQuoteRequest").toString());
-        String referencesTemp = formParams.getReferences().replace("，", ",");
-        references = Arrays.asList(referencesTemp.split(","));
+
         etdDays = formParams.getEtdDays();
         maxPrice = formParams.getPrice();
         isNeedLineName = formParams.getIsNeedLineName();
@@ -469,10 +479,9 @@ public class HuanJi implements ITask {
         orderSleepTime = formParams.getOrderSleepTime();
         fclQuoteRequest.put("schedulesAfterDate", MyUtils.getNowDate(7, "yyyy-MM-dd"));
         authorization = formParams.getAuthorization();
-        isNeedBrokerAddress = formParams.getBrokerageAddress();
         scac = formParams.getScac();
         initPort(startPort, endPort);
-        getAddress(notifyAddress, consigneeAddress);
+
     }
 
     private void initPort(Port startPort, Port endPort) {
@@ -507,13 +516,10 @@ public class HuanJi implements ITask {
             Long[] ids = new Long[10];
             ids[0] = paramsLine.getJobId();
             stopTask(ids);
+            sendErrorMail(messageText + "token 为空值暂停任务",messageText);
             return;
         }
         JSONObject object = JSONObject.parseObject(result);
-        if (object == null) {
-            System.out.println("getToken object为空");
-            return;
-        }
         getTokenHandleData(object);
     }
 
@@ -531,20 +537,18 @@ public class HuanJi implements ITask {
         JSONObject companyAddress = company.getJSONArray("addresses").getJSONObject(0);
         addressInfo.put("address1", companyAddress.get("address1").toString());
         addressInfo.put("address2", companyAddress.get("address2").toString());
-        if(formParams.getAccount() == 1){
+        if (!"".equals(companyAddress.get("address3").toString())) {
             addressInfo.put("address3", companyAddress.get("address3").toString());
         }
         addressInfo.put("cityTown", companyAddress.get("cityTown").toString());
         addressInfo.put("country", companyAddress.get("country").toString());
-        if (companyAddress.get("vatNo") != null) {
-            addressInfo.put("vatNo", companyAddress.get("vatNo").toString());
-        }
+        addressInfo.put("vatNo", companyAddress.get("vatNo").toString());
         addressInfo.put("postCode", companyAddress.get("postCode").toString());
         addressText = addressText + "," + companyAddress.get("address1").toString() + "," + companyAddress.get("address2").toString() + "," + companyAddress.get("cityTown").toString() + "," + companyAddress.get("postCode").toString() + ",CN";
         addressInfo.put("addressText", addressText);
         consignorBookingAddress.putAll(addressInfo);
         bookedByAddress.putAll(addressInfo);
-
+        bookedByAddress.put("companyRole",company.get("role").toString());
         brokerageAddress.putAll(addressInfo);
         if(authorization != info.get("token").toString()){
             authorization = info.get("token").toString();
@@ -562,8 +566,8 @@ public class HuanJi implements ITask {
         }
     }
 
-    private void getAddress(Address notifyAddress, Address consigneeAddress) {
-        if (notifyAddress != null && consigneeAddress != null) {
+    private void getAddress() {
+        if (notifyAddress.getId() != null && consigneeAddress.getId() != null) {
             Map<String, Object> addressMap = new HashMap<>();
             addressMap.put("address1", notifyAddress.getAddress1());
             addressMap.put("addressText", notifyAddress.getSingleLine());
@@ -574,7 +578,12 @@ public class HuanJi implements ITask {
             addressMap.put("firstName", notifyAddress.getFirstName());
             addressMap.put("lastName", notifyAddress.getLastName());
             addressMap.put("phone", notifyAddress.getPhone());
-            addressMap.put("vatNo", notifyAddress.getVatNo());
+            if(notifyAddress.getVatNo() != null){
+                addressMap.put("vatNo", notifyAddress.getVatNo());
+            }
+            if (notifyAddress.getPostCode() != null){
+                addressMap.put("postCode", notifyAddress.getPostCode());
+            }
             notifyBookingAddress.putAll(addressMap);
             consigneeBookingAddress.putAll(addressMap);
         }
@@ -587,11 +596,11 @@ public class HuanJi implements ITask {
         // 设置邮件主题
         String accountStr = "";
         if(formParams.getAccount() == 0){
-            accountStr = "环集美线";
+            accountStr = "前端环集美线";
         }else if (formParams.getAccount() == 1){
-            accountStr = "泰博美线";
+            accountStr = "前端泰博美线";
         }else if(formParams.getAccount() == 2){
-            accountStr = "附属账号";
+            accountStr = "前端附属账号";
         }
         message.setSubject(messageText + accountStr +"抢单成功");
         // 设置邮件发送者，这个跟application.yml中设置的要一致
@@ -603,21 +612,21 @@ public class HuanJi implements ITask {
         // 设置邮件发送日期
         message.setSentDate(new Date());
         // 设置邮件的正文
-        if (referenceIndex > successNum) {
+        if (failedReferences.size() > successNum) {
 //            代表有小提单号已被使用过
-            messageText = messageText + "，实际成功下了" + successNum + "单，其中小提单号有被使用过而下单失败" +
-                    "下单的小提单号：【" + String.join("，", references) + "】";
+            messageText = messageText + "，实际成功下了" + (references.size() - failedReferences.size()) + "单，其中小提单号有被使用过而下单失败" +
+                    "下单的小提单号：【" + String.join("，", failedReferences) + "】";
         } else {
             if (isNeedLineName) {
-                messageText = messageText + "，成功下了" + successNum + "单。" + "柜子型号：" + equipment + "航名:" + vesselName + "航次:" + voyage + " ETD间隔时间:" + etdDays +
-                        "下单的小提单号：【" + String.join("，", references) + "】";
+                messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + "航名:" + vesselName + "航次:" + voyage + " ETD间隔时间:" + etdDays +
+                        "下单的小提单号：【" + String.join("，", successedReferences) + "】";
             } else {
                 if (isNeedSupplierName) {
-                    messageText = messageText + "，成功下了" + successNum + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays + " 航线代码" + etdDays +
-                            "下单的小提单号：【" + String.join("，", references) + "】";
+                    messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays + " 航线代码" + etdDays +
+                            "下单的小提单号：【" + String.join("，", successedReferences) + "】";
                 } else {
-                    messageText = messageText + "，成功下了" + successNum + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays +
-                            "下单的小提单号：【" + String.join("，", references) + "】";
+                    messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays +
+                            "下单的小提单号：【" + String.join("，", successedReferences) + "】";
                 }
 
             }

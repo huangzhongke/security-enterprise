@@ -13,4 +13,5 @@ import io.renren.modules.spider.entity.Line;
  */
 public interface LineService extends BaseService<Line> {
     Long save(Line line);
+    void deleteByScheduleJobIds(Long[] ids);
 }

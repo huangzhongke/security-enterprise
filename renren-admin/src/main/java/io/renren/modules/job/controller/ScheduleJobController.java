@@ -18,7 +18,7 @@ import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.service.ScheduleJobService;
-import io.renren.modules.spider.service.AccountLineService;
+import io.renren.modules.spider.service.LineService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -41,8 +41,9 @@ import java.util.Map;
 public class ScheduleJobController {
 	@Autowired
 	private ScheduleJobService scheduleJobService;
+
 	@Autowired
-	private AccountLineService accountLineService;
+	private LineService lineService;
 
 	@GetMapping("page")
 	@ApiOperation("分页")
@@ -98,6 +99,7 @@ public class ScheduleJobController {
 	@LogOperation("删除")
 	@RequiresPermissions("sys:schedule:delete")
 	public Result delete(@RequestBody Long[] ids){
+		lineService.deleteByScheduleJobIds(ids);
 		scheduleJobService.deleteBatch(ids);
 		return new Result();
 	}

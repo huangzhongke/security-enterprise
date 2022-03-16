@@ -12,7 +12,7 @@ import java.util.Map;
  * @version 1.0
  * @date 2022/2/16 16:13
  */
-@CrossOrigin(origins = {"http://localhost:8001"})
+
 @RestController
 @RequestMapping("/one")
 public class SearchPortController {

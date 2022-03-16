@@ -18,7 +18,9 @@ public class FormParams {
     private Port endPort;
     private Address notifyAddress;
     private Address consigneeAddress;
-    private Boolean brokerageAddress;
+    private Boolean isNeedBrokerageAddress;
+    private Boolean isNeedNotifyAddress;
+    private Boolean isNeedConsigneeAddress;
     private Integer etdDays;
     private Boolean isProxy;
     private Boolean isNeedLineName;
@@ -44,7 +46,9 @@ public class FormParams {
                 ", \"endPort\":" + endPort  +
                 ", \"notifyAddress\":" + notifyAddress  +
                 ", \"consigneeAddress\":" + consigneeAddress  +
-                ", \"brokerageAddress\":" + brokerageAddress +
+                ", \"isNeedBrokerageAddress\":" + isNeedBrokerageAddress +
+                ", \"isNeedNotifyAddress\":" + isNeedNotifyAddress +
+                ", \"isNeedConsigneeAddress\":" + isNeedConsigneeAddress +
                 ", \"etdDays\":" + etdDays +
                 ", \"isProxy\":" + isProxy +
                 ", \"isNeedLineName\":" + isNeedLineName +
