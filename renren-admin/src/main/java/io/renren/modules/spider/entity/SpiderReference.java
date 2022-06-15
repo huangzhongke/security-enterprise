@@ -29,4 +29,6 @@ public class SpiderReference implements Serializable {
     private Boolean used;
 
     private Long lineId;
+
+    private Boolean success;
 }

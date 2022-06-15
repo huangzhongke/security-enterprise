@@ -34,10 +34,9 @@ public class FormParams {
     private String authorization;
     private String references;
     private String scac;
-    private Double price;
-    private Integer account;
-    private Integer booked; //0未下单 1下单
-
+    private Integer price;
+    private Integer account;//0未下单 1下单
+    private Integer weight;
     @Override
     public String toString() {
         return "{" +
@@ -64,7 +63,7 @@ public class FormParams {
                 ", \"scac\":\"" + scac + '\"' +
                 ", \"price\":" + price +
                 ", \"account\":" + account +
-                ", \"booked\":" + booked +
+                ", \"weight\":" + weight     +
                 '}';
     }
 }

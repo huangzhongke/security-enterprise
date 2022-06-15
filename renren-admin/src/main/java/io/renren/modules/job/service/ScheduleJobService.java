@@ -12,6 +12,7 @@ import io.renren.common.page.PageData;
 import io.renren.common.service.BaseService;
 import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.entity.ScheduleJobEntity;
+import io.renren.modules.spider.dto.DataFormDto;
 
 import java.util.Map;
 
@@ -29,12 +30,12 @@ public interface ScheduleJobService extends BaseService<ScheduleJobEntity> {
 	/**
 	 * 保存定时任务
 	 */
-	void save(ScheduleJobDTO dto);
+	void save(DataFormDto dto);
 	
 	/**
 	 * 更新定时任务
 	 */
-	void update(ScheduleJobDTO dto);
+	void update(DataFormDto dto);
 	
 	/**
 	 * 批量删除定时任务

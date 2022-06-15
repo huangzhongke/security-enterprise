@@ -8,6 +8,7 @@
 
 package io.renren.modules.job.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
 import io.renren.common.page.PageData;
@@ -18,6 +19,7 @@ import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.service.ScheduleJobService;
+import io.renren.modules.spider.dto.DataFormDto;
 import io.renren.modules.spider.service.LineService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -54,7 +56,7 @@ public class ScheduleJobController {
 		@ApiImplicitParam(name = Constant.ORDER, value = "排序方式，可选值(asc、desc)", paramType = "query", dataType="String") ,
 		@ApiImplicitParam(name = "beanName", value = "beanName", paramType = "query", dataType="String")
 	})
-	@RequiresPermissions("sys:schedule:page")
+	@RequiresPermissions("sys:schedule:all")
 	public Result<PageData<ScheduleJobDTO>> page(@ApiIgnore @RequestParam Map<String, Object> params){
 		PageData<ScheduleJobDTO> page = scheduleJobService.page(params);
 
@@ -63,21 +65,29 @@ public class ScheduleJobController {
 
 	@GetMapping("{id}")
 	@ApiOperation("信息")
-	@RequiresPermissions("sys:schedule:info")
-	public Result<ScheduleJobDTO> info(@PathVariable("id") Long id){
+	@RequiresPermissions("sys:schedule:all")
+	public Result<DataFormDto> info(@PathVariable("id") Long id){
+
 		ScheduleJobDTO schedule = scheduleJobService.get(id);
-		
-		return new Result<ScheduleJobDTO>().ok(schedule);
+		DataFormDto dataFormDto = JSONObject.parseObject(schedule.getParams(), DataFormDto.class);
+		dataFormDto.setBeanName(schedule.getBeanName());
+		dataFormDto.setParams(schedule.getParams());
+		dataFormDto.setCronExpression(schedule.getCronExpression());
+		dataFormDto.setRemark(schedule.getRemark());
+		dataFormDto.setStatus(schedule.getStatus());
+		dataFormDto.setId(schedule.getId());
+		return new Result<DataFormDto>().ok(dataFormDto);
 	}
 
 	@PostMapping
 	@ApiOperation("保存")
 	@LogOperation("保存")
-	@RequiresPermissions("sys:schedule:save")
-	public Result save(@RequestBody ScheduleJobDTO dto){
-		ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
+	@RequiresPermissions("sys:schedule:all")
+	public Result save(@RequestBody DataFormDto dataForm){
 
-		scheduleJobService.save(dto);
+		ValidatorUtils.validateEntity(dataForm, AddGroup.class, DefaultGroup.class);
+
+		scheduleJobService.save(dataForm);
 
 		return new Result();
 	}
@@ -85,8 +95,9 @@ public class ScheduleJobController {
 	@PutMapping
 	@ApiOperation("修改")
 	@LogOperation("修改")
-	@RequiresPermissions("sys:schedule:update")
-	public Result update(@RequestBody ScheduleJobDTO dto){
+	@RequiresPermissions("sys:schedule:all")
+	public Result update(@RequestBody DataFormDto dto){
+
 		ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 				
 		scheduleJobService.update(dto);
@@ -97,7 +108,7 @@ public class ScheduleJobController {
 	@DeleteMapping
 	@ApiOperation("删除")
 	@LogOperation("删除")
-	@RequiresPermissions("sys:schedule:delete")
+	@RequiresPermissions("sys:schedule:all")
 	public Result delete(@RequestBody Long[] ids){
 		lineService.deleteByScheduleJobIds(ids);
 		scheduleJobService.deleteBatch(ids);
@@ -107,7 +118,7 @@ public class ScheduleJobController {
 	@PutMapping("/run")
 	@ApiOperation("立即执行")
 	@LogOperation("立即执行")
-	@RequiresPermissions("sys:schedule:run")
+	@RequiresPermissions("sys:schedule:all")
 	public Result run(@RequestBody Long[] ids){
 		scheduleJobService.run(ids);
 		
@@ -117,7 +128,7 @@ public class ScheduleJobController {
 	@PutMapping("/pause")
 	@ApiOperation("暂停")
 	@LogOperation("暂停")
-	@RequiresPermissions("sys:schedule:pause")
+	@RequiresPermissions("sys:schedule:all")
 	public Result pause(@RequestBody Long[] ids){
 		scheduleJobService.pause(ids);
 		
@@ -127,7 +138,7 @@ public class ScheduleJobController {
 	@PutMapping("/resume")
 	@ApiOperation("恢复")
 	@LogOperation("恢复")
-	@RequiresPermissions("sys:schedule:resume")
+	@RequiresPermissions("sys:schedule:all")
 	public Result resume(@RequestBody Long[] ids){
 		scheduleJobService.resume(ids);
 		

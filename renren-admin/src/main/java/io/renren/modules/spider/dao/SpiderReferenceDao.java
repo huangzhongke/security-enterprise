@@ -4,6 +4,8 @@ import io.renren.common.dao.BaseDao;
 import io.renren.modules.spider.entity.SpiderReference;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * @author kee
  * @version 1.0
@@ -11,4 +13,8 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SpiderReferenceDao extends BaseDao<SpiderReference> {
+
+    List<String> getSuccessListByLineId(Long lineId);
+
+    List<String> getFailListByLineId(Long lineId);
 }

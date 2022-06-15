@@ -44,7 +44,7 @@ public class LineController {
     public Result update(@RequestBody Line line) {
         lineService.updateById(line);
         spiderReferenceService.updateReferencesByLindId(line);
-        return new Result();
+        return new Result().ok(line);
     }
 
 }

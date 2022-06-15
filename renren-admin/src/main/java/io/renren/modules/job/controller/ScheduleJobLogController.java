@@ -45,7 +45,7 @@ public class ScheduleJobLogController {
 		@ApiImplicitParam(name = Constant.ORDER, value = "排序方式，可选值(asc、desc)", paramType = "query", dataType="String") ,
 		@ApiImplicitParam(name = "jobId", value = "jobId", paramType = "query", dataType="String")
 	})
-	@RequiresPermissions("sys:schedule:log")
+	@RequiresPermissions("sys:schedule:all")
 	public Result<PageData<ScheduleJobLogDTO>> page(@ApiIgnore @RequestParam Map<String, Object> params){
 		PageData<ScheduleJobLogDTO> page = scheduleJobLogService.page(params);
 		
@@ -54,7 +54,7 @@ public class ScheduleJobLogController {
 
 	@GetMapping("{id}")
 	@ApiOperation("信息")
-	@RequiresPermissions("sys:schedule:log")
+	@RequiresPermissions("sys:schedule:all")
 	public Result<ScheduleJobLogDTO> info(@PathVariable("id") Long id){
 		ScheduleJobLogDTO log = scheduleJobLogService.get(id);
 		

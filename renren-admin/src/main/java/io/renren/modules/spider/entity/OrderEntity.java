@@ -1,9 +1,13 @@
 package io.renren.modules.spider.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import io.renren.common.entity.BaseEntity;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -15,20 +19,22 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@EqualsAndHashCode(callSuper=false)
 @TableName("spider_order")
 @Builder
-public class OrderEntity extends BaseEntity {
+public class OrderEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	private Long id;
     /**
      * 起始港
      */
-	private String from;
+	@TableField("startPort")
+	private String startPort;
     /**
      * 目的港
      */
-	private String to;
+	@TableField("endPort")
+	private String endPort;
     /**
      * 柜子
      */
@@ -40,22 +46,27 @@ public class OrderEntity extends BaseEntity {
     /**
      * 下单间隔时间
      */
+	@TableField("order_sleeptime")
 	private Integer orderSleepTime;
     /**
      * 下单时间
      */
+	@TableField("order_date")
 	private Date orderDate;
     /**
      * 是否使用代理
      */
+	@TableField("is_proxy")
 	private Boolean isProxy;
     /**
      * 是否指定航线代码
      */
+	@TableField("is_need_suppliername")
 	private Boolean isNeedSupplierName;
     /**
      * 是否指定航名航次
      */
+	@TableField("is_need_linename")
 	private Boolean isNeedLineName;
     /**
      * 航名
@@ -68,6 +79,7 @@ public class OrderEntity extends BaseEntity {
     /**
      * 航线代码
      */
+	@TableField("suppliername")
 	private String supplierName;
     /**
      * 账号
@@ -81,4 +93,5 @@ public class OrderEntity extends BaseEntity {
      * 小提单号
      */
 	private String reference;
+
 }

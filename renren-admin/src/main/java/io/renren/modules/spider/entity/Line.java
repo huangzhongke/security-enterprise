@@ -1,5 +1,6 @@
 package io.renren.modules.spider.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.renren.common.validator.group.AddGroup;
 import io.swagger.annotations.ApiModel;
@@ -36,5 +37,10 @@ public class Line implements Serializable {
 
     @ApiModelProperty(value = "定时任务ID")
     private Long jobId;
+
+
+    @ApiModelProperty(value = "身份码")
+    @TableField("authorization")
+    private String authorization;
 
 }

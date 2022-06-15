@@ -24,6 +24,7 @@ import java.util.List;
  *
  * @author Mark sunlightcs@gmail.com
  */
+
 @Component
 public class JobCommandLineRunner implements CommandLineRunner {
     @Autowired

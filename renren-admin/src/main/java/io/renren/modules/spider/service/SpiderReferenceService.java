@@ -20,4 +20,8 @@ public interface SpiderReferenceService extends BaseService<SpiderReference> {
     void updateReferencesByLindId(Line line);
 
     void deleteByLineId(Long id);
+
+    List<String> getSuccessListByLineId(Long lineId);
+
+    List<String> getFailListByLineId(Long lineId);
 }

@@ -1,4 +1,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.renren.modules.spider.dao.SpiderReferenceDao">
 
+    <select id="getSuccessListByLineId" resultType="java.lang.String">
+        select reference from spider_references where line_id = #{id} and success = true
+    </select>
+    <select id="getFailListByLineId" resultType="java.lang.String">
+        select reference from spider_references where line_id = #{id} and success = false
+    </select>
 </mapper>

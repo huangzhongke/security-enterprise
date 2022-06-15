@@ -13,16 +13,13 @@
     "hazardous": false,
     "reefer": false,
     "stackable": true,
-    "customs": {
-      "countryConfigs": [
-        {
-          "code": "2",
-          "country": "US",
-          "scac": "HSCP"
-        }
-      ]
-    },
     "references": [
+      {
+        "displayName": "MOT Number",
+        "editableReadOnly": true,
+        "reference": "04823",
+        "referenceType": "branchCode"
+      },
       {
         "referenceType": "agent",
         "reference": "NB1BJB763900",

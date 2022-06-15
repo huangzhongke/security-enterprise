@@ -1,0 +1,7 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.renren.modules.spider.dao.CrawlerTypeDao">
+
+    <select id="getCrawlerTypeByCrawlerName" resultType="io.renren.modules.spider.entity.CrawlerType">
+        select * from spider_crawler_type where crawler_name = #{crawlerName}
+    </select>
+</mapper>

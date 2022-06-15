@@ -32,9 +32,10 @@ public class ScheduleConfig {
         Properties prop = new Properties();
         prop.put("org.quartz.scheduler.instanceName", "RenrenScheduler");
         prop.put("org.quartz.scheduler.instanceId", "AUTO");
+//        prop.put("org.quartz.scheduler.batchTriggerAcquisitionMaxCount","100");
         //线程池配置
         prop.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-        prop.put("org.quartz.threadPool.threadCount", "120");
+        prop.put("org.quartz.threadPool.threadCount", "100");
         prop.put("org.quartz.threadPool.threadPriority", "5");
         //JobStore配置
         prop.put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
@@ -42,6 +43,7 @@ public class ScheduleConfig {
         prop.put("org.quartz.jobStore.isClustered", "true");
         prop.put("org.quartz.jobStore.clusterCheckinInterval", "15000");
         prop.put("org.quartz.jobStore.maxMisfiresToHandleAtATime", "100");
+        prop.put("org.quartz.jobStore.acquireTriggersWithinLock","true");
 
         prop.put("org.quartz.jobStore.misfireThreshold", "12000");
         prop.put("org.quartz.jobStore.tablePrefix", "QRTZ_");
@@ -54,7 +56,7 @@ public class ScheduleConfig {
 
         factory.setSchedulerName("RenrenScheduler");
         //延时启动
-        factory.setStartupDelay(0);
+        factory.setStartupDelay(30);
         factory.setApplicationContextSchedulerContextKey("applicationContextKey");
         //可选，QuartzScheduler 启动时更新己存在的Job，这样就不用每次修改targetObject后删除qrtz_job_details表对应记录了
         factory.setOverwriteExistingJobs(true);

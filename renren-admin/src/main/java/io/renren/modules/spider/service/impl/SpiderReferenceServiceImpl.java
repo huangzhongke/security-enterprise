@@ -66,4 +66,14 @@ public class SpiderReferenceServiceImpl extends BaseServiceImpl<SpiderReferenceD
     public void deleteByLineId(Long id) {
         spiderReferenceDao.delete(new LambdaQueryWrapper<SpiderReference>().eq(SpiderReference::getLineId,id));
     }
+
+    @Override
+    public List<String> getSuccessListByLineId(Long lineId) {
+        return spiderReferenceDao.getSuccessListByLineId(lineId);
+    }
+
+    @Override
+    public List<String> getFailListByLineId(Long lineId) {
+        return spiderReferenceDao.getFailListByLineId(lineId);
+    }
 }

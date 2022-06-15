@@ -7,10 +7,14 @@ import io.renren.modules.job.entity.ScheduleJobEntity;
 import io.renren.modules.job.service.ScheduleJobService;
 import io.renren.modules.spider.dao.OrderDao;
 import io.renren.modules.spider.entity.*;
+import io.renren.modules.spider.exception.TokenDisabledException;
 import io.renren.modules.spider.service.LineService;
 import io.renren.modules.spider.service.SpiderReferenceService;
 import io.renren.modules.spider.utils.HttpUtils;
 import io.renren.modules.spider.utils.MyUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,42 +23,18 @@ import org.springframework.stereotype.Component;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author kee
  * @version 1.0
  * @date 2022/2/16 14:18
  */
+
+@Slf4j
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
 @Component("huanji")
 public class HuanJi implements ITask {
-    private List<SpiderReference> references;
-    private Integer etdDays;
-    private Boolean isNeedLineName;
-    private Boolean isNeedSupplierName;
-    private String vesselName;
-    private String voyage;
-    private String supplierName;
-    private String equipment;
-    private Integer quantity;
-    private Map<String, Object> fclQuoteRequest = new HashMap<>();
-    private String orderedDate = ""; //新的ETD航线时间必须大于这个时间
-    private static Boolean isProxy;
-    private static Integer orderSleepTime;
-    private String authorization;
-    private Map<String, Object> consignorBookingAddress = new HashMap<>(); //发货人信息
-    private Map<String, Object> consigneeBookingAddress = new HashMap<>(); //收货人信息
-    private Map<String, Object> notifyBookingAddress = new HashMap<>(); //通知人信息
-    private Map<String, Object> brokerageAddress = new HashMap<>(); //货代人信息
-    private Map<String, Object> bookedByAddress = new HashMap<>();
-
-    private String messageText = ""; //发送邮箱信息正文
-    private Port startPort;
-    private Port endPort;
-    private Address notifyAddress;
-    private Address consigneeAddress;
-    private Double maxPrice;
-    private String scac;
     @Autowired
     LineService lineService;
     @Autowired
@@ -63,185 +43,192 @@ public class HuanJi implements ITask {
     JavaMailSender javaMailSender;
     @Autowired
     OrderDao orderDao;
-    private FormParams formParams;
-    private Map<String, Object> paramsMap;
-    private Line paramsLine;
-    private List<String> failedReferences = new ArrayList<>();
-    private List<String> successedReferences = new ArrayList<>();
-
-    private String tempReference;
     @Autowired
-    private SpiderReferenceService spiderReferenceService;
+    SpiderReferenceService spiderReferenceService;
+
+
     @Override
     public void run(String params) {
-        paramsMap = JSONObject.parseObject(params);
-        Long id = Long.parseLong(paramsMap.get("id").toString());
-        paramsLine = lineService.selectById(id);
-        formParams = JSONObject.parseObject(paramsLine.getParams(), FormParams.class);
-        formParams.setId(id);
-        if (formParams.getBooked() == 1) {
-            Long[] ids = new Long[10];
-            ids[0] = paramsLine.getJobId();
-            stopTask(ids);
-            return;
-        }
         try {
-            references = spiderReferenceService.getListByLineId(id);
 
-            //初始化数据
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-            init();
+            FormParams  formParams = JSONObject.parseObject(params, FormParams.class);
+            System.out.println(formParams);
+            Port startPort = formParams.getStartPort();
+            Port endPort = formParams.getEndPort();
+            Line line = lineService.selectById(formParams.getId());
             //刷新身份码
-            getToken();
+            Map<String, Object> dataMap = getToken(formParams, line, startPort, endPort);
+            //初始化数据
+            List<SpiderReference> references = spiderReferenceService.getListByLineId(formParams.getId());
+            log.debug("更新authorization 账号:{}(0:环集,1:泰博,2:附属)",formParams.getAccount());
+            System.out.println("更新authorization 账号: "+ formParams.getAccount() + "(0:环集,1:泰博,2:附属)");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
             if (references.size() > 0) {
-                String showText = "总共" + references.size() + "个小提单号，当前时间：" + sdf.format(new Date()) + "查询的是【" + startPort.getMatched() + "-" + endPort.getMatched() + "】 type:" + equipment + " ETD间隔时间:" + etdDays;
+                String showText = "总共" + references.size() + "个小提单号，当前时间：" + sdf.format(new Date()) + "查询的是【" + startPort.getMatched() + "-" + endPort.getMatched() + "】 type:" + formParams.getEquipment() + " ETD间隔时间:" + formParams.getEtdDays();
                 if (formParams.getIsNeedLineName()) {
-                    showText += "【航名】:" + vesselName + "【航次】:" + voyage;
+                    showText += "【航名】:" + formParams.getVesselName() + "【航次】:" + formParams.getVoyage();
                 } else {
                     showText += "未指定航名航次";
                 }
                 if (formParams.getIsNeedSupplierName()) {
-                    showText += " 【航线代码】: " + supplierName;
+                    showText += " 【航线代码】: " + formParams.getSupplierName();
                 } else {
                     showText += " 未指定航线代码 ";
                 }
+                log.debug(showText);
                 System.out.println(showText);
-                Map<String, Object> fclScheduleWithRatesData = getFclScheduleWithRates();
+                Map<String, Object> fclScheduleWithRatesData = getFclScheduleWithRates(formParams,line,startPort,endPort);
                 if (null != fclScheduleWithRatesData) {
+                    log.info("查询到所需的航线信息开始下单 " + sdf.format(new Date()));
                     System.out.println("查询到所需的航线信息开始下单 " + sdf.format(new Date()));
-                    getAddress();
-                    for (SpiderReference sr : references) {
-                        if (!sr.getUsed()){
-                            tempReference = sr.getReference();
-                            String bookId = submitBookings(fclScheduleWithRatesData);
-                            if (bookId != null && !"error".equals(bookId)) {
-                                // 确定提交，修改状态
-                                updateStatus(bookId);
-                                OrderEntity order = OrderEntity.builder()
-                                        .from(startPort.getMatched())
-                                        .to(endPort.getMatched())
-                                        .equipment(equipment)
-                                        .quantity(quantity)
-                                        .orderSleepTime(orderSleepTime)
-                                        .orderDate(new Date())
-                                        .isProxy(isProxy)
-                                        .isNeedLineName(isNeedLineName)
-                                        .isNeedSupplierName(isNeedSupplierName)
-                                        .vessel(vesselName)
-                                        .voyage(voyage)
-                                        .supplierName(supplierName)
-                                        .account(formParams.getAccount())
-                                        .etd(formParams.getEtdDays())
-                                        .reference(sr.getReference())
-                                        .build();
-                                orderDao.saveOrder(order);
-                                successedReferences.add(sr.getReference());
-                                sr.setUsed(true);
-                                spiderReferenceService.updateById(sr);
-                        }else if (bookId == null) {
-                                failedReferences.add(sr.getReference());
-                                sr.setUsed(true);
-                                spiderReferenceService.updateById(sr);
+                    getAddress(formParams, dataMap);
+                    List<String> successList = new ArrayList<>();
+                    List<String> failList = new ArrayList<>();
+                        for (SpiderReference sr : references) {
+                            if (!sr.getUsed()) {
+                                String bookId = submitBookings(fclScheduleWithRatesData, sr.getReference(),formParams,line,startPort,endPort,dataMap);
+                                if (bookId != null && !"error".equals(bookId)) {
+                                    // 确定提交，修改状态
+                                    updateStatus(bookId,formParams,line);
+                                    sr.setUsed(true);
+                                    sr.setSuccess(true);
+                                    spiderReferenceService.updateById(sr);
+                                    saveOrder(sr.getReference(),formParams,startPort,endPort);
+                                    successList.add(sr.getReference());
+                                } else if (bookId == null) {
+                                    sr.setUsed(true);
+                                    sr.setSuccess(false);
+                                    spiderReferenceService.updateById(sr);
+                                    failList.add(sr.getReference());
+                                }
+                                Thread.sleep(formParams.getOrderSleepTime());
+
                             }
-                    }
+                        }
 
-                        TimeUnit.SECONDS.sleep(formParams.getOrderSleepTime());
-                    }
-                    //下完单吧下单状态修改为1
-
-                    ScheduleJobEntity scheduleJob = scheduleJobService.selectById(paramsLine.getJobId());
-                    formParams.setBooked(1);
-                    paramsLine.setParams(formParams.toString());
-                    scheduleJob.setParams(formParams.toString());
-                    //同时修改定时任务的参数 和 Line的参数
-                    scheduleJobService.updateById(scheduleJob);
-                    lineService.updateById(paramsLine);
-                    sendMail(successedReferences.size());
+                    stopJob(line);
+                    sendMail(successList,failList,formParams,startPort,endPort);
                 }
             }
-
-        } catch (NullPointerException nullPointerException) {
-
-        } catch (Exception e) {
-            sendErrorMail("程序出现异常了" + e.getMessage(), "程序停止了，请手动重新运行");
+        } catch (ParseException p) {
+            System.out.println(p);
+        } catch (InterruptedException e) {
+            System.out.println(e);
         }
     }
 
-    private void updateStatus(String bookId) {
-        String url = "https://cetusapi-prod.kontainers.io/booking/api/v1/customer/booking/tick/" + bookId;
-        Map<String, String> params = new HashMap<>();
-        params.put("Authorization", authorization);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        String result = HttpUtils.sendPut(url, resultMap, params, isProxy);
-
-        System.out.println("【确定提交，修改状态】:" + result);
+    private void stopJob(Line line) {
+        Long[] ids = new Long[1];
+        ids[0] = line.getJobId();
+        scheduleJobService.pause(ids);
     }
 
-    Map<String, Object> submitBookingsData(Map<String, Object> fclScheduleWithRatesData) {
+    private void saveOrder(String reference,FormParams formParams,Port startPort, Port endPort) {
+        OrderEntity order = OrderEntity.builder()
+                .startPort(startPort.getMatched())
+                .endPort(endPort.getMatched())
+                .equipment(formParams.getEquipment())
+                .quantity(formParams.getQuantity())
+                .orderSleepTime(formParams.getOrderSleepTime())
+                .orderDate(new Date())
+                .isProxy(formParams.getIsProxy())
+                .isNeedLineName(formParams.getIsNeedLineName())
+                .isNeedSupplierName(formParams.getIsNeedSupplierName())
+                .vessel(formParams.getVesselName())
+                .voyage(formParams.getVoyage())
+                .supplierName(formParams.getSupplierName())
+                .account(formParams.getAccount())
+                .etd(formParams.getEtdDays())
+                .reference(reference)
+                .build();
+        orderDao.insert(order);
+    }
 
+    private void updateStatus(String bookId,FormParams formParams,Line line) {
+        String url = "https://cetusapi-prod.kontainers.io/booking/api/v1/customer/booking/tick/" + bookId;
+        Map<String, String> params = new HashMap<>();
+        params.put("Authorization", line.getAuthorization());
+
+        Map<String, Object> resultMap = new HashMap<>();
+        String result = HttpUtils.sendPut(url, resultMap, params, formParams.getIsProxy());
+
+        //System.out.println("【确定提交，修改状态】:" + result);
+        log.info("【确定提交，修改状态】:" + result);
+    }
+
+    Map<String, Object> submitBookingsData(Map<String, Object> fclScheduleWithRatesData, String reference,FormParams formParams,Port startPort,Port endPort,Map<String, Object> dataMap) {
         Map<String, Object> booking = JSONObject.parseObject(MyUtils.readJsonFile("submitBookData.json"));
         Map<String, Object> info = JSONObject.parseObject(booking.get("booking").toString());
-        Map<String, Object> customs = JSONObject.parseObject(info.get("customs").toString());
-        List<Map<String, Object>> countryConfigs = new ArrayList<>();
-        Map<String, Object> map = new HashMap<>();
-        map.put("scac", scac);
-        map.put("code", "2");
-        map.put("country", "US");
-        countryConfigs.add(map);
-        customs.put("countryConfigs", countryConfigs);
-        info.put("customs", customs);
+
         info.put("fmc", endPort.getFmc());
-        List<Map<String, Object>> referencesTemp;
-        String port = formParams.getStartPort().getMatched();
-        if ("NANSHA, GUANGDONG".equals(port) || "YANTIAN, GUANGDONG".equals(port) || "XIAMEN, FUJIAN".equals(port)) {
+        List<Map<String, Object>> referencesTemp = JSONObject.parseObject(info.get("references").toString(), new TypeReference<List<Map<String, Object>>>() {
+        });
+        if ("NANSHA, GUANGDONG".equals(startPort.getMatched()) || "YANTIAN, GUANGDONG".equals(startPort.getMatched()) || "XIAMEN, FUJIAN".equals(startPort.getMatched())) {
             //只有Yantian和xiamen 是 填空 其他都要填
-            referencesTemp = new ArrayList<>();
+            referencesTemp.remove(1);
         } else {
             //可变参数，小提单号
-            referencesTemp = JSONObject.parseObject(info.get("references").toString(), new TypeReference<List<Map<String, Object>>>() {
-            });
-            referencesTemp.get(0).put("reference",tempReference);
+
+            referencesTemp.get(1).put("reference", reference);
         }
 
         info.put("references", referencesTemp);
-        info.put("customerReference", tempReference);
+        info.put("customerReference", reference);
 
         //可变参数，型号
         List<Map<String, Object>> bookingItems = JSONObject.parseObject(info.get("bookingItems").toString(), new TypeReference<List<Map<String, Object>>>() {
         });
         bookingItems.get(0).put("containerType", formParams.getEquipment());
+        bookingItems.get(0).put("weight", formParams.getWeight().toString());
 //        判断数量，是否大于1,一票多个高柜
-        if (quantity > 1) {
-            for (int i = 1; i < quantity; i++) {
-                Map<String, Object> items = new HashMap<>();
-                items.putAll(bookingItems.get(0));
+        if (formParams.getQuantity() > 1) {
+            for (int i = 1; i < formParams.getQuantity(); i++) {
+                Map<String, Object> map = new HashMap<>();
+                map.putAll(bookingItems.get(0));
                 List<Map<String, Object>> bookingItemDetails = new ArrayList<>();
-                Map<String, Object> temp = new HashMap<>();
-                temp.put("commodityCode","940330");
-                temp.put("description","OFFICE FURNITURE, OF WOOD");
-                temp.put("distanceUnit","cms");
-                temp.put("valueCurrency","USD");
-                temp.put("volumeUnit","CubicMeters");
-                temp.put("weightUnit","KG");
-                bookingItemDetails.add(temp);
-                map.put("bookingItemDetails",bookingItemDetails);
-                bookingItems.add(items);
+                Map<String, Object> map2 = new HashMap<>();
+                map2.put("commodityCode", "940330");
+                map2.put("description", "OFFICE FURNITURE, OF WOOD");
+                map2.put("distanceUnit", "cms");
+                map2.put("valueCurrency", "USD");
+                map2.put("volumeUnit", "CubicMeters");
+                map2.put("weightUnit", "KG");
+                bookingItemDetails.add(map2);
+                map.put("bookingItemDetails", bookingItemDetails);
+                bookingItems.add(map);
             }
         }
+        //如果是美线会加customs
+        if (endPort.getFmc() && endPort.getMatched().equals("VANCOUVER, BC")) {
+            Map<String, Object> customs = new HashMap<>();
+            List<Map<String, Object>> countryConfigs = new ArrayList<>();
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", "2");
+            map.put("country", "US");
+            map.put("scac", formParams.getScac());
+            countryConfigs.add(map);
+            customs.put("countryConfigs", countryConfigs);
+            info.put("customs", customs);
+        }
+        info.put("moveType", null);
         info.put("bookingItems", bookingItems);
         info.put("bookingCosts", fclScheduleWithRatesData.get("bookingCosts"));
         info.put("logisticsDetails", fclScheduleWithRatesData.get("logisticsDetails"));
-        if(formParams.getIsNeedConsigneeAddress()){
+        if (formParams.getIsNeedConsigneeAddress()) {
+            Map<String, Object> consigneeBookingAddress = (Map<String, Object>) dataMap.get("consigneeBookingAddress");
             info.put("consigneeBookingAddress", consigneeBookingAddress);
         }
-        if (formParams.getIsNeedNotifyAddress()){
+        if (formParams.getIsNeedNotifyAddress()) {
+            Map<String, Object> notifyBookingAddress = (Map<String, Object>) dataMap.get("notifyBookingAddress");
             info.put("notifyBookingAddress", notifyBookingAddress);
         }
 
         if (formParams.getIsNeedBrokerageAddress()) {
+            Map<String, Object> brokerageAddress = (Map<String, Object>) dataMap.get("brokerageAddress");
             info.put("brokerageAddress", brokerageAddress);
         }
+        Map<String, Object> consignorBookingAddress = (Map<String, Object>) dataMap.get("consignorBookingAddress");
+        Map<String, Object> bookedByAddress = (Map<String, Object>) dataMap.get("bookedByAddress");
         info.put("consignorBookingAddress", consignorBookingAddress);
         info.put("bookedByAddress", bookedByAddress);
         Map<String, Object> resultMap = new HashMap<>();
@@ -249,16 +236,16 @@ public class HuanJi implements ITask {
         return resultMap;
     }
 
-    private String submitBookings(Map<String, Object> fclScheduleWithRatesData) {
+    private String submitBookings(Map<String, Object> fclScheduleWithRatesData, String reference,FormParams formParams,Line line,Port startPort,Port endPort,Map<String, Object> dataMap) {
         String url = "https://cetusapi-prod.kontainers.io/booking/api/v1/customer/bookings";
         Map<String, String> params = new HashMap<>();
-        params.put("Authorization", authorization);
+        params.put("Authorization", line.getAuthorization());
 
 //        请求数据处理
-        Map<String, Object> resultMap = submitBookingsData(fclScheduleWithRatesData);
+        Map<String, Object> resultMap = submitBookingsData(fclScheduleWithRatesData, reference,formParams,startPort,endPort,dataMap);
         System.out.println("【预提交】请求数据处理:" + resultMap);
 //        return null;
-        String result = HttpUtils.sendPost(url, resultMap, params, isProxy);
+        String result = HttpUtils.sendPost(url, resultMap, params, formParams.getIsProxy());
 
         JSONObject object = JSONObject.parseObject(result);
         if (object.get("booking") != null) {
@@ -270,41 +257,66 @@ public class HuanJi implements ITask {
             });
             if ("422".equals(errors.get(0).get("status"))) {
                 System.out.println("【小提单号已存在】:" + result);
+                log.info("【小提单号已存在】:" + result);
                 return null;
             } else {
                 System.out.println("【预提交失败】:" + result);
+                log.info("【预提交失败】:" + result);
                 return "error";
             }
         }
     }
 
     //    获取航线的接口
-    private Map<String, Object> getFclScheduleWithRates() throws ParseException {
-
+    private Map<String, Object> getFclScheduleWithRates(FormParams formParams,Line line,Port startPort,Port endPort) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        //读取数据文件
+        Map<String, Object> fclScheduleDataResultMapJSON = JSONObject.parseObject(MyUtils.readJsonFile("fclScheduleData.json"));
+        Map<String, Object> fclQuoteRequest = JSONObject.parseObject(fclScheduleDataResultMapJSON.get("fclQuoteRequest").toString());
 
+        //添加柜子型号和数量
+        Map<String, Object> map = new HashMap<>(2);
+        List<Map<String, Object>> equipmentRequest = new ArrayList<>();
+        map.put("equipment", formParams.getEquipment());
+        map.put("quantity", formParams.getQuantity());
+        equipmentRequest.add(map);
+        fclQuoteRequest.put("equipmentRequest", equipmentRequest);
+
+        //搜索日期今天的日期加7天
+        fclQuoteRequest.put("schedulesAfterDate", MyUtils.getNowDate(7, "yyyy-MM-dd"));
+        //港口信息
+        fclQuoteRequest.put("from", startPort.getMatched());
+        fclQuoteRequest.put("fromCountry", startPort.getMatchedCountry());
+        fclQuoteRequest.put("fromUNCode", startPort.getUnCode());
+        if (startPort.getIata() == null) {
+            fclQuoteRequest.remove("fromIata");
+        } else {
+            fclQuoteRequest.put("fromIata", startPort.getIata());
+        }
+        fclQuoteRequest.put("to", endPort.getMatched());
+        fclQuoteRequest.put("toCountry", endPort.getMatchedCountry());
+        fclQuoteRequest.put("toUNCode", endPort.getUnCode());
+        fclQuoteRequest.put("fmc", endPort.getFmc());
+        if (endPort.getIata() != null) {
+            fclQuoteRequest.put("toIata", endPort.getIata());
+        }
+        Map<String, Object> fclScheduleDataResultMap = new HashMap<>();
         String url = "https://cetusapi-prod.kontainers.io/trip-ui/api/v1/customer/fclScheduleWithRates";
         Map<String, String> params = new HashMap<>();
-        params.put("Authorization", authorization);
-
-
-        messageText = "【从" + fclQuoteRequest.get("from") + "到" + fclQuoteRequest.get("to") + "的航线】 " + equipment;
-
-
-        Map<String, Object> fclScheduleDataResultMap = new HashMap<>();
+        params.put("Authorization", line.getAuthorization());
         fclScheduleDataResultMap.put("fclQuoteRequest", fclQuoteRequest);
         String result = HttpUtils.sendPost(url, fclScheduleDataResultMap, params, false);
 
         if ("".equals(result)) {
             System.out.println("获取航线接口的数据为空");
-            return null;
+            log.info("获取航线接口的数据为空");
+            throw new TokenDisabledException("获取航线接口的数据为空");
         }
 
         JSONObject object = JSONObject.parseObject(result);
-        if (object == null) {
-            System.out.println("getFclScheduleWithRates  Object为空");
-            return null;
-        }
+
+        //下单时间 今天日期加上指定的etd天数
+        String orderedDate = MyUtils.getNowDate(formParams.getEtdDays(), "yyyy-MM-dd");
         if (object.get("multiLegScheduleWithRate") != null) {
 //            有航线,取最新的一条航线
             List<Map<String, Object>> multiLegScheduleWithRateList = JSONObject.parseObject(object.get("multiLegScheduleWithRate").toString(), new TypeReference<List<Map<String, Object>>>() {
@@ -332,35 +344,35 @@ public class HuanJi implements ITask {
                     }
 
                     // 如果航线的终点是 new york 需要制定 其他都不需要
-                    if ("NEW YORK, NY".equals(legs.get(0).get("to").toString()) && "NINGBO, ZHEJIANG".equals(legs.get(0).get("from").toString())) {
-                        if (!"EAST COAST 2".equals(legs.get(0).get("supplierName").toString())) {
-                            continue;
-                        }
-                    }
+                    //if ("NEW YORK, NY".equals(legs.get(0).get("to").toString()) && "NINGBO, ZHEJIANG".equals(legs.get(0).get("from").toString())) {
+                    //    if (!"EAST COAST 2".equals(legs.get(0).get("supplierName").toString())) {
+                    //        continue;
+                    //    }
+                    //}
                     if (formParams.getIsNeedSupplierName()) {
-                        if (!supplierName.equals(legs.get(0).get("supplierName").toString())) {
+                        if (!formParams.getSupplierName().equals(legs.get(0).get("supplierName").toString())) {
                             continue;
                         }
                     }
                     if (formParams.getIsNeedLineName()) {
-                        if ((!vesselName.equals(legs.get(0).get("vesselName"))) && !(voyage.equals(legs.get(0).get("voyage")))) {
+                        if ((!formParams.getVesselName().equals(legs.get(0).get("vesselName"))) && !(formParams.getVoyage().equals(legs.get(0).get("voyage")))) {
                             continue;
                         }
                     }
 //                   判断航线条件
-                    if (etdDays != 0 && maxPrice != 0) {
+                    if (formParams.getEtdDays() != 0 && formParams.getPrice() != 0) {
 //                       即判断时间，也判断价格
-                        if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(legs.get(0).get("etd").toString())) && Float.parseFloat(temp.get("totalCost").toString()) < maxPrice) {
+                        if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(legs.get(0).get("etd").toString())) && Float.parseFloat(temp.get("totalCost").toString()) < formParams.getPrice()) {
                             multiLegScheduleWithRate = legs.get(0);
                         }
-                    } else if (etdDays != 0) {
+                    } else if (formParams.getEtdDays() != 0) {
                         //                  判断时间是否大于orderedDate起始时间
                         if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(legs.get(0).get("etd").toString()))) {
                             multiLegScheduleWithRate = legs.get(0);
                         }
-                    } else if (maxPrice != 0) {
+                    } else if (formParams.getPrice() != 0) {
                         //                       根据钱作为判断,小于满足条件的价格
-                        if (Float.parseFloat(temp.get("totalCost").toString()) < maxPrice) {
+                        if (Float.parseFloat(temp.get("totalCost").toString()) < formParams.getPrice()) {
                             multiLegScheduleWithRate = legs.get(0);
                         }
                     } else {
@@ -371,22 +383,18 @@ public class HuanJi implements ITask {
 
                 if (multiLegScheduleWithRate == null) {
                     String printText = "";
-                    if (etdDays != 0) {
+                    if (formParams.getEtdDays() != 0) {
                         printText = "【目前最新ETD时间】：" + orderedDate + ";";
                     }
-                    if (maxPrice != 0) {
-                        printText = printText + "【可接受金额必须小于】：" + maxPrice + ";";
+                    if (formParams.getPrice() != 0) {
+                        printText = printText + "【可接受金额必须小于】：" + formParams.getPrice() + ";";
                     }
-//                    System.out.println(printText + "【获取航线的接口数据】" + result);
+                    log.info(printText);
                     return null;
                 }
-
-//               保留时间
-//               orderedDate = multiLegScheduleWithRate.get("etd").toString();
                 return fclScheduleWithRatesHandleData(multiLegScheduleWithRate, supplierSummaries);
             }
         }
-//        System.out.println("目前没有可下单的航线");
         return null;
     }
 
@@ -446,84 +454,27 @@ public class HuanJi implements ITask {
 
     }
 
-    private void init() {
-        startPort = formParams.getStartPort();
-        endPort = formParams.getEndPort();
-        notifyAddress = formParams.getNotifyAddress();
-        consigneeAddress = formParams.getConsigneeAddress();
-        Map<String, Object> fclScheduleDataResultMap = JSONObject.parseObject(MyUtils.readJsonFile("fclScheduleData.json"));
-        fclQuoteRequest = JSONObject.parseObject(fclScheduleDataResultMap.get("fclQuoteRequest").toString());
 
-        etdDays = formParams.getEtdDays();
-        maxPrice = formParams.getPrice();
-        isNeedLineName = formParams.getIsNeedLineName();
-        isNeedSupplierName = formParams.getIsNeedSupplierName();
-        if (isNeedLineName) {
-            vesselName = formParams.getVesselName();
-            voyage = formParams.getVoyage();
-        }
-        if (isNeedSupplierName) {
-            supplierName = formParams.getSupplierName();
-        }
-        //初始化商品型号和数量
-        equipment = formParams.getEquipment();
-        quantity = formParams.getQuantity();
-        Map<String, Object> map = new HashMap<>(2);
-        List<Map<String, Object>> equipmentRequest = new ArrayList<>();
-        map.put("equipment", equipment);
-        map.put("quantity", quantity);
-        equipmentRequest.add(map);
-        fclQuoteRequest.put("equipmentRequest", equipmentRequest);
-        orderedDate = MyUtils.getNowDate(etdDays, "yyyy-MM-dd");
-        isProxy = formParams.getIsProxy();
-        orderSleepTime = formParams.getOrderSleepTime();
-        fclQuoteRequest.put("schedulesAfterDate", MyUtils.getNowDate(7, "yyyy-MM-dd"));
-        authorization = formParams.getAuthorization();
-        scac = formParams.getScac();
-        initPort(startPort, endPort);
 
-    }
-
-    private void initPort(Port startPort, Port endPort) {
-        fclQuoteRequest.put("from", startPort.getMatched());
-        fclQuoteRequest.put("fromCountry", startPort.getMatchedCountry());
-        fclQuoteRequest.put("fromUNCode", startPort.getUnCode());
-        if(startPort.getIata() == null){
-            fclQuoteRequest.remove("fromIata");
-        }else {
-            fclQuoteRequest.put("fromIata", startPort.getIata());
-        }
-        fclQuoteRequest.put("to", endPort.getMatched());
-        fclQuoteRequest.put("toCountry", endPort.getMatchedCountry());
-        fclQuoteRequest.put("toUNCode", endPort.getUnCode());
-        fclQuoteRequest.put("fmc", endPort.getFmc());
-        if (endPort.getIata() != null) {
-            fclQuoteRequest.put("toIata", endPort.getIata());
-        }
-    }
-    private void stopTask(Long[] ids){
-        scheduleJobService.pause(ids);
-    }
-
-    private void getToken() {
+    private Map<String, Object> getToken(FormParams formParams,Line line,Port startPort,Port endPort) {
         String url = "https://cetusapi-prod.kontainers.io/tenancy/api/v1/customer/users/self";
         Map<String, String> params = new HashMap<>();
-        params.put("Authorization", authorization);
+        params.put("Authorization", line.getAuthorization());
         params.put("Referer", "https://instantquote.one-line.com/");
         String result = HttpUtils.sendGet(url, null, params, false);
         if ("".equals(result)) {
-            System.out.println("getToken result结果为空值 停止任务");
-            Long[] ids = new Long[10];
-            ids[0] = paramsLine.getJobId();
-            stopTask(ids);
-            sendErrorMail(messageText + "token 为空值暂停任务",messageText);
-            return;
+            log.info("token身份码失效停止任务");
+            sendErrorMail("token身份码失效停止任务,请更换身份码再重新启动任务,账号:" + formParams.getAccount(),formParams,startPort,endPort);
+            stopJob(lineService.selectById(formParams.getId()));
         }
         JSONObject object = JSONObject.parseObject(result);
-        getTokenHandleData(object);
+        return  getTokenHandleData(object,formParams,line);
     }
 
-    private void getTokenHandleData(JSONObject object) {
+    private Map<String, Object> getTokenHandleData(JSONObject object,FormParams formParams,Line line) {
+        Map<String, Object> consignorBookingAddress = new HashMap<>();
+        Map<String, Object> bookedByAddress = new HashMap<>();
+        Map<String, Object> brokerageAddress = new HashMap<>();
         Map<String, Object> addressInfo = new HashMap<>();
         JSONObject info = JSONObject.parseObject(object.get("user").toString());
         addressInfo.put("lastName", info.get("lastName").toString());
@@ -548,26 +499,34 @@ public class HuanJi implements ITask {
         addressInfo.put("addressText", addressText);
         consignorBookingAddress.putAll(addressInfo);
         bookedByAddress.putAll(addressInfo);
-        bookedByAddress.put("companyRole",company.get("role").toString());
+        bookedByAddress.put("companyRole", company.get("role").toString());
         brokerageAddress.putAll(addressInfo);
-        if(authorization != info.get("token").toString()){
-            authorization = info.get("token").toString();
-            System.out.println("更新authorization" + formParams.getEquipment());
-        }
-        Long id = formParams.getId();
-        if (null != id) {
-            formParams.setAuthorization(authorization);
-            paramsLine.setParams(formParams.toString());
-            lineService.updateById(paramsLine);
-            ScheduleJobEntity scheduleJobEntity = scheduleJobService.selectById(paramsLine.getJobId());
-            scheduleJobEntity.setParams(paramsLine.getParams());
-            scheduleJobService.updateById(scheduleJobEntity);
+        String token = info.get("token").toString();
 
-        }
+        //修改数据库的身份码
+        //修改航线的params
+        formParams.setAuthorization(token);
+        line.setParams(formParams.toString());
+        line.setAuthorization(token);
+        lineService.updateById(line);
+        ScheduleJobEntity scheduleJobEntity = scheduleJobService.selectById(line.getJobId());
+        scheduleJobEntity.setParams(formParams.toString());
+        scheduleJobService.updateById(scheduleJobEntity);
+        Map<String, Object> returnMap = new HashMap<>();
+        returnMap.put("bookedByAddress",bookedByAddress);
+        returnMap.put("brokerageAddress",brokerageAddress);
+        returnMap.put("consignorBookingAddress",consignorBookingAddress);
+        return returnMap;
     }
 
-    private void getAddress() {
-        if (notifyAddress.getId() != null && consigneeAddress.getId() != null) {
+    private void getAddress(FormParams formParams,Map<String, Object> dataMap) {
+        if (formParams.getIsNeedNotifyAddress() && formParams.getIsNeedConsigneeAddress()) {
+            Map<String, Object> notifyBookingAddress = new HashMap<>();
+            Map<String, Object> consigneeBookingAddress = new HashMap<>();
+            Address notifyAddress = formParams.getNotifyAddress();
+            Address consigneeAddress = formParams.getConsigneeAddress();
+            notifyAddress = formParams.getNotifyAddress();
+            consigneeAddress = formParams.getConsigneeAddress();
             Map<String, Object> addressMap = new HashMap<>();
             addressMap.put("address1", notifyAddress.getAddress1());
             addressMap.put("addressText", notifyAddress.getSingleLine());
@@ -578,83 +537,91 @@ public class HuanJi implements ITask {
             addressMap.put("firstName", notifyAddress.getFirstName());
             addressMap.put("lastName", notifyAddress.getLastName());
             addressMap.put("phone", notifyAddress.getPhone());
-            if(notifyAddress.getVatNo() != null){
+            if (notifyAddress.getVatNo() != null) {
                 addressMap.put("vatNo", notifyAddress.getVatNo());
             }
-            if (notifyAddress.getPostCode() != null){
+            if (notifyAddress.getPostCode() != null) {
                 addressMap.put("postCode", notifyAddress.getPostCode());
             }
             notifyBookingAddress.putAll(addressMap);
             consigneeBookingAddress.putAll(addressMap);
+            dataMap.put("notifyBookingAddress",notifyBookingAddress);
+            dataMap.put("consigneeBookingAddress",consigneeBookingAddress);
+
         }
+
     }
 
     //发送邮箱
-    private void sendMail(int successNum) {
+    private void sendMail(List successList,List failList,FormParams formParams,Port startPort,Port endPort) {
         // 构建一个邮件对象
         SimpleMailMessage message = new SimpleMailMessage();
         // 设置邮件主题
         String accountStr = "";
-        if(formParams.getAccount() == 0){
-            accountStr = "前端环集美线";
-        }else if (formParams.getAccount() == 1){
-            accountStr = "前端泰博美线";
-        }else if(formParams.getAccount() == 2){
-            accountStr = "前端附属账号";
+        if (formParams.getAccount().equals(0)) {
+            accountStr = "前端环集";
         }
-        message.setSubject(messageText + accountStr +"抢单成功");
+        if (formParams.getAccount().equals(1)) {
+            accountStr = "前端泰博";
+        }
+        if (formParams.getAccount().equals(2)) {
+            accountStr = "前端附属";
+        }
+
+        String messageText = "【从" + startPort.getMatched() + "到" + endPort.getMatched() + "的航线】 " + formParams.getEquipment();
+        message.setSubject(messageText + accountStr + "抢单成功");
         // 设置邮件发送者，这个跟application.yml中设置的要一致
         message.setFrom("1059308740@qq.com");
-        // 设置邮件接收者，可以有多个接收者，中间用逗号隔开，以下类似
-        // message.setTo("10*****16@qq.com","12****32*qq.com");
+
 //        message.setTo("1973432033@qq.com","Zhibo_Tang@zjou.edu.cn","771829811@qq.com"); one-ebooking@nb-hj.com 公司邮箱 ,"1973432033@qq.com","1610531743@qq.com","one-ebooking@nb-hj.com"
         message.setTo("1059308740@qq.com");
         // 设置邮件发送日期
         message.setSentDate(new Date());
         // 设置邮件的正文
-        if (failedReferences.size() > successNum) {
+
+        if (failList.size() > 0) {
+            message.setSubject(messageText + accountStr + "抢单失败");
 //            代表有小提单号已被使用过
-            messageText = messageText + "，实际成功下了" + (references.size() - failedReferences.size()) + "单，其中小提单号有被使用过而下单失败" +
-                    "下单的小提单号：【" + String.join("，", failedReferences) + "】";
+            messageText = messageText + "，下失败了" + failList.size() + "单，其中小提单号有被使用过而下单失败" +
+                    "下单的小提单号：【" + String.join("，", failList) + "】";
+
         } else {
-            if (isNeedLineName) {
-                messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + "航名:" + vesselName + "航次:" + voyage + " ETD间隔时间:" + etdDays +
-                        "下单的小提单号：【" + String.join("，", successedReferences) + "】";
+            String text = "，成功下了" + successList.size() + "单。" + "柜子型号：" + formParams.getEquipment();
+            if (formParams.getIsNeedLineName()) {
+                messageText = messageText + text + "航名:" + formParams.getVesselName() + "航次:" + formParams.getVoyage() + " ETD间隔时间: 0" +
+                        "下单的小提单号：【" + String.join("，", successList) + "】";
             } else {
-                if (isNeedSupplierName) {
-                    messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays + " 航线代码" + etdDays +
-                            "下单的小提单号：【" + String.join("，", successedReferences) + "】";
+                if (formParams.getIsNeedSupplierName()) {
+                    messageText = messageText + text + " ETD间隔时间:" + formParams.getEtdDays() + " 航线代码" + formParams.getSupplierName() +
+                            "下单的小提单号：【" + String.join("，", successList) + "】";
                 } else {
-                    messageText = messageText + "，成功下了" + successedReferences.size() + "单。" + "柜子型号：" + equipment + " ETD间隔时间:" + etdDays +
-                            "下单的小提单号：【" + String.join("，", successedReferences) + "】";
+                    messageText = messageText + text + " ETD间隔时间:" + formParams.getEtdDays() +
+                            "下单的小提单号：【" + String.join("，", successList) + "】";
                 }
-
             }
-
-
         }
-
         message.setText(messageText);
+        log.info(messageText);
         // 发送邮件
         javaMailSender.send(message);
     }
 
     //发送邮箱
-    private void sendErrorMail(String errorMessage, String title) {
+    private void sendErrorMail(String errorMessage,FormParams formParams,Port startPort,Port endPort) {
+        String title = "【从" + startPort.getMatched() + "到" + endPort.getMatched() + "的航线】 " + formParams.getEquipment();
         // 构建一个邮件对象
         SimpleMailMessage message = new SimpleMailMessage();
         // 设置邮件主题
         message.setSubject(title);
         // 设置邮件发送者，这个跟application.yml中设置的要一致
         message.setFrom("1059308740@qq.com");
-        // 设置邮件接收者，可以有多个接收者，中间用逗号隔开，以下类似
-        // message.setTo("10*****16@qq.com","12****32*qq.com");
-//        message.setTo("1973432033@qq.com","Zhibo_Tang@zjou.edu.cn","771829811@qq.com");
+
+//       message.setTo("1973432033@qq.com","Zhibo_Tang@zjou.edu.cn","771829811@qq.com");
         message.setTo("1059308740@qq.com");
         // 设置邮件发送日期
         message.setSentDate(new Date());
 
-        message.setText(messageText + errorMessage);
+        message.setText(errorMessage);
         // 发送邮件
         javaMailSender.send(message);
     }
