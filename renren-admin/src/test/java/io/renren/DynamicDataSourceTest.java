@@ -8,16 +8,19 @@
 
 package io.renren;
 
-import io.renren.modules.spider.dao.OrderDao;
-import io.renren.modules.spider.entity.OrderEntity;
-import io.renren.service.DynamicDataSourceTestService;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
+import io.renren.modules.spider.menu.entity.Account;
+import io.renren.modules.spider.menu.service.AccountService;
+import io.renren.modules.spider.utils.MyUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 多数据源测试
@@ -27,30 +30,28 @@ import java.util.Date;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DynamicDataSourceTest {
+
     @Autowired
-    private DynamicDataSourceTestService dynamicDataSourceTestService;
-    @Autowired
-    OrderDao orderDao;
+    AccountService accountService;
+
     @Test
     public void test(){
-        OrderEntity order = OrderEntity.builder()
-                .startPort("NINGBO")
-                .endPort("DAR ES SALAAM")
-                .equipment("40HQ")
-                .quantity(1)
-                .orderSleepTime(0)
-                .orderDate(new Date())
-                .isProxy(false)
-                .isNeedLineName(true)
-                .isNeedSupplierName(true)
-                .vessel("NORTHERN VALENCE")
-                .voyage("226W")
-                .supplierName("EAST AFRICA SERVICE 4 (DAR ES SALAAM)")
-                .account(0)
-                .etd(10)
-                .reference("NB2BJ8517600")
-                .build();
-        orderDao.insert(order);
+        String s = MyUtils.readJsonFile("account.json");
+        List<Map<String, Object>> accountList = JSONObject.parseObject(s, new TypeReference<List<Map<String, Object>>>() {
+        });
+        for (Map<String, Object> map : accountList) {
+            Account account = new Account();
+            account.setUser(map.get("username").toString());
+            account.setPassword(map.get("password").toString());
+            account.setPayPassword(map.get("pay").toString());
+            account.setType(0);
+            if(map.get("ip")!=null){
+                account.setAgentIp(map.get("ip").toString());
+            }
+            accountService.insert(account);
+        }
+        System.out.println("插入完毕");
+
     }
 
 }

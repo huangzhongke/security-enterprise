@@ -20,11 +20,12 @@ import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.entity.ScheduleJobEntity;
 import io.renren.modules.job.service.ScheduleJobService;
 import io.renren.modules.job.utils.ScheduleUtils;
-import io.renren.modules.spider.dto.DataFormDto;
-import io.renren.modules.spider.entity.Line;
-import io.renren.modules.spider.entity.SpiderReference;
-import io.renren.modules.spider.service.LineService;
-import io.renren.modules.spider.service.SpiderReferenceService;
+import io.renren.modules.spider.one.dto.DataFormDto;
+import io.renren.modules.spider.oocl.dto.OOCLDataFormDTO;
+import io.renren.modules.spider.menu.entity.Line;
+import io.renren.modules.spider.one.entity.SpiderReference;
+import io.renren.modules.spider.one.service.LineService;
+import io.renren.modules.spider.one.service.SpiderReferenceService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,9 +59,11 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 
 	private QueryWrapper<ScheduleJobEntity> getWrapper(Map<String, Object> params){
 		String beanName = (String)params.get("beanName");
+		String type = (String)params.get("type");
 
 		QueryWrapper<ScheduleJobEntity> wrapper = new QueryWrapper<>();
 		wrapper.like(StringUtils.isNotBlank(beanName), "bean_name", beanName);
+		wrapper.like(StringUtils.isNotBlank(type), "type", type);
 
 		return wrapper;
 	}
@@ -101,6 +104,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		params.put("price",dataFormDto.getPrice());
 		params.put("account",dataFormDto.getAccount());
 		params.put("weight",dataFormDto.getWeight());
+		params.put("type",dataFormDto.getType());
 
 		ScheduleJobEntity entity = new ScheduleJobEntity();
 		entity.setBeanName(dataFormDto.getBeanName());
@@ -109,6 +113,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		entity.setParams(JSONObject.toJSONString(params));
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
 		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
+		entity.setType(dataFormDto.getType());
         this.insert(entity);
 		//2 存 子表 spider_line
 		Line line = new Line();
@@ -170,6 +175,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		params.put("price",dataFormDto.getPrice());
 		params.put("account",dataFormDto.getAccount());
 		params.put("weight",dataFormDto.getWeight());
+		params.put("type",dataFormDto.getType());
 
 		ScheduleJobEntity entity = new ScheduleJobEntity();
 		entity.setId(dataFormDto.getId());
@@ -202,6 +208,66 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		}
 
     }
+
+	@Override
+	public void save(OOCLDataFormDTO dataFormDto) {
+		ScheduleJobEntity entity = new ScheduleJobEntity();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("id",null);
+		paramsMap.put("startPort",dataFormDto.getStartPort());
+		paramsMap.put("endPort",dataFormDto.getEndPort());
+		paramsMap.put("equipment",dataFormDto.getEquipment());
+		paramsMap.put("vesselName",dataFormDto.getVesselName());
+		paramsMap.put("voyage",dataFormDto.getVoyage());
+		paramsMap.put("quantity",dataFormDto.getQuantity());
+		paramsMap.put("price",dataFormDto.getPrice());
+		paramsMap.put("account",dataFormDto.getAccount());
+		paramsMap.put("cookie",dataFormDto.getCookie());
+		paramsMap.put("token",dataFormDto.getToken());
+		paramsMap.put("startDate",dataFormDto.getStartDate());
+		paramsMap.put("endDate",dataFormDto.getEndDate());
+		paramsMap.put("type",dataFormDto.getType());
+		entity.setBeanName(dataFormDto.getBeanName());
+		entity.setCronExpression(dataFormDto.getCronExpression());
+		entity.setRemark(dataFormDto.getRemark());
+		entity.setType(dataFormDto.getType());
+		entity.setParams(JSONObject.toJSONString(paramsMap));
+		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
+		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
+		this.insert(entity);
+		ScheduleUtils.createScheduleJob(scheduler, entity);
+	}
+
+	@Override
+	public void update(OOCLDataFormDTO dataFormDto) {
+		ScheduleJobEntity entity = new ScheduleJobEntity();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("id",dataFormDto.getId());
+		paramsMap.put("startPort",dataFormDto.getStartPort());
+		paramsMap.put("endPort",dataFormDto.getEndPort());
+		paramsMap.put("equipment",dataFormDto.getEquipment());
+		paramsMap.put("vesselName",dataFormDto.getVesselName());
+		paramsMap.put("voyage",dataFormDto.getVoyage());
+		paramsMap.put("quantity",dataFormDto.getQuantity());
+		paramsMap.put("price",dataFormDto.getPrice());
+		paramsMap.put("account",dataFormDto.getAccount());
+		paramsMap.put("cookie",dataFormDto.getCookie());
+		paramsMap.put("token",dataFormDto.getToken());
+		paramsMap.put("startDate",dataFormDto.getStartDate());
+		paramsMap.put("endDate",dataFormDto.getEndDate());
+		paramsMap.put("type",dataFormDto.getType());
+
+		entity.setId(dataFormDto.getId());
+		entity.setBeanName(dataFormDto.getBeanName());
+		entity.setCronExpression(dataFormDto.getCronExpression());
+		entity.setRemark(dataFormDto.getRemark());
+		entity.setType(dataFormDto.getType());
+		entity.setParams(JSONObject.toJSONString(paramsMap));
+		entity.setStatus(dataFormDto.getStatus());
+		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
+		ScheduleUtils.updateScheduleJob(scheduler, entity);
+		this.updateById(entity);
+	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)

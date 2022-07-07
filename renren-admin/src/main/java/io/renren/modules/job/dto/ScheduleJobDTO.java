@@ -61,4 +61,6 @@ public class ScheduleJobDTO implements Serializable {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Date createDate;
 
+    private Integer type;
+
 }

@@ -59,4 +59,9 @@ public class ScheduleJobEntity extends BaseEntity {
 	 */
 	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Date updateDate;
+
+	/**
+	 *定时任务类型
+	 */
+	private Integer type;
 }

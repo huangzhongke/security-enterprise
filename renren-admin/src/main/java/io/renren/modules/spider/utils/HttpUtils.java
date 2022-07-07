@@ -84,8 +84,6 @@ public class HttpUtils {
 
     }
 
-
-
     /**
      * @param url      请求地址
      * @param paramMap 请求体参数
@@ -153,7 +151,77 @@ public class HttpUtils {
         }
         return content;
     }
+    /**
+     * @param url      请求地址
+     * @param headers  请求头
+     * @param params   请求参数
+     * @return
+     */
+    public static String sendGet(String url, Map<String, String> headers, Map<String, Object> params) {
+        CloseableHttpResponse response = null;
+        String content = null;
+        CloseableHttpClient httpClient = getHttpClient();
+        try {
+            //设置请求地址是：http://yun.itheima.com/search?keys=Java
+            //创建URIBuilder
+            URIBuilder uriBuilder = new URIBuilder(url);
+            // 封装get请求参数
+            if (null != params && params.size() > 0) {
+//				url = url+"?";
+                // 循环遍历，获取迭代器
+                for (String keyMap : params.keySet()) {
+                    //设置参数
+//					url += keyMap + "=" + URLEncoder.encode(paramMap.get(keyMap), "utf-8") + "&";
+                    uriBuilder.setParameter(keyMap, params.get(keyMap).toString());
 
+                }
+            }
+
+            HttpGet get = new HttpGet(uriBuilder.build());
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setConnectTimeout(10000000)//设置连接超时时间,单位毫秒
+                    .setSocketTimeout(10000000)//设置读取超时时间,单位毫秒
+                    .setConnectionRequestTimeout(100000000)
+                    .build();
+            get.setConfig(requestConfig);
+
+            //			添加头
+            for (String key : headers.keySet()) {
+//				System.out.println("key= "+ key + " and value= " + params.get(key));
+                get.addHeader(key, headers.get(key));
+            }
+            get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36");
+            get.addHeader("Content-Type", "application/json; charset=UTF-8");
+            get.addHeader("Accept", "application/json");
+
+
+            response = httpClient.execute(get, context);
+            HttpEntity entity = response.getEntity();
+            content = EntityUtils.toString(entity);
+            // System.out.println(TAG + "GET:" + content);
+            EntityUtils.consume(entity);
+            return content;
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+            if (httpClient != null) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return content;
+    }
     /**
      * post请求
      *

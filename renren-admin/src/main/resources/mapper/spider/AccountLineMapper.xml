@@ -3,7 +3,7 @@
 <mapper namespace="io.renren.modules.spider.dao.AccountLineDao">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.renren.modules.spider.entity.AccountLine">
+    <resultMap id="BaseResultMap" type="io.renren.modules.spider.menu.entity.AccountLine">
         <result column="account_id" property="accountId" />
         <result column="line_id" property="lineId" />
     </resultMap>

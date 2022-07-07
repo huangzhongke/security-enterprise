@@ -16,11 +16,11 @@ import io.renren.common.utils.Result;
 import io.renren.common.validator.ValidatorUtils;
 import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
-import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.service.ScheduleJobService;
-import io.renren.modules.spider.dto.DataFormDto;
-import io.renren.modules.spider.service.LineService;
+import io.renren.modules.spider.one.dto.DataFormDto;
+import io.renren.modules.spider.one.service.LineService;
+import io.renren.modules.spider.oocl.dto.OOCLDataFormDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -66,29 +66,49 @@ public class ScheduleJobController {
 	@GetMapping("{id}")
 	@ApiOperation("信息")
 	@RequiresPermissions("sys:schedule:all")
-	public Result<DataFormDto> info(@PathVariable("id") Long id){
+	public Result info(@PathVariable("id") Long id){
 
 		ScheduleJobDTO schedule = scheduleJobService.get(id);
-		DataFormDto dataFormDto = JSONObject.parseObject(schedule.getParams(), DataFormDto.class);
-		dataFormDto.setBeanName(schedule.getBeanName());
-		dataFormDto.setParams(schedule.getParams());
-		dataFormDto.setCronExpression(schedule.getCronExpression());
-		dataFormDto.setRemark(schedule.getRemark());
-		dataFormDto.setStatus(schedule.getStatus());
-		dataFormDto.setId(schedule.getId());
-		return new Result<DataFormDto>().ok(dataFormDto);
+		if (schedule.getType() == 0) {
+			DataFormDto dataFormDto = JSONObject.parseObject(schedule.getParams(), DataFormDto.class);
+			dataFormDto.setBeanName(schedule.getBeanName());
+			dataFormDto.setParams(schedule.getParams());
+			dataFormDto.setCronExpression(schedule.getCronExpression());
+			dataFormDto.setRemark(schedule.getRemark());
+			dataFormDto.setStatus(schedule.getStatus());
+			dataFormDto.setId(schedule.getId());
+			return new Result<DataFormDto>().ok(dataFormDto);
+		}
+		if (schedule.getType() == 1) {
+			OOCLDataFormDTO dataFormDTO = JSONObject.parseObject(schedule.getParams(), OOCLDataFormDTO.class);
+			dataFormDTO.setBeanName(schedule.getBeanName());
+			dataFormDTO.setParams(schedule.getParams());
+			dataFormDTO.setCronExpression(schedule.getCronExpression());
+			dataFormDTO.setRemark(schedule.getRemark());
+			dataFormDTO.setStatus(schedule.getStatus());
+			dataFormDTO.setId(schedule.getId());
+			return new Result<OOCLDataFormDTO>().ok(dataFormDTO);
+		}
+
+		return new Result<>();
 	}
 
 	@PostMapping
 	@ApiOperation("保存")
 	@LogOperation("保存")
 	@RequiresPermissions("sys:schedule:all")
-	public Result save(@RequestBody DataFormDto dataForm){
-
-		ValidatorUtils.validateEntity(dataForm, AddGroup.class, DefaultGroup.class);
-
-		scheduleJobService.save(dataForm);
-
+	public Result save(@RequestBody Map<String, Object> params){
+		//@RequestBody DataFormDto dataForm
+		if (params.get("tag").equals("one")){
+			DataFormDto dataForm = JSONObject.parseObject(params.get("data").toString(),DataFormDto.class);
+			ValidatorUtils.validateEntity(dataForm, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.save(dataForm);
+		}
+		if (params.get("tag").equals("oocl")){
+			OOCLDataFormDTO dataFormDTO = JSONObject.parseObject(params.get("data").toString(), OOCLDataFormDTO.class);
+			ValidatorUtils.validateEntity(dataFormDTO, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.save(dataFormDTO);
+		}
 		return new Result();
 	}
 
@@ -96,11 +116,18 @@ public class ScheduleJobController {
 	@ApiOperation("修改")
 	@LogOperation("修改")
 	@RequiresPermissions("sys:schedule:all")
-	public Result update(@RequestBody DataFormDto dto){
+	public Result update(@RequestBody Map<String, Object> params){
 
-		ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-				
-		scheduleJobService.update(dto);
+		if (params.get("tag").equals("one")){
+			DataFormDto dataForm = JSONObject.parseObject(params.get("data").toString(),DataFormDto.class);
+			ValidatorUtils.validateEntity(dataForm, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.update(dataForm);
+		}
+		if (params.get("tag").equals("oocl")){
+			OOCLDataFormDTO dataFormDTO = JSONObject.parseObject(params.get("data").toString(), OOCLDataFormDTO.class);
+			ValidatorUtils.validateEntity(dataFormDTO, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.update(dataFormDTO);
+		}
 		
 		return new Result();
 	}
@@ -110,7 +137,12 @@ public class ScheduleJobController {
 	@LogOperation("删除")
 	@RequiresPermissions("sys:schedule:all")
 	public Result delete(@RequestBody Long[] ids){
-		lineService.deleteByScheduleJobIds(ids);
+		Long id = ids[0];
+		ScheduleJobDTO scheduleJobDTO = scheduleJobService.get(id);
+		if(scheduleJobDTO.getType() == 0){
+			lineService.deleteByScheduleJobIds(ids);
+
+		}
 		scheduleJobService.deleteBatch(ids);
 		return new Result();
 	}
