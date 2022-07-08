@@ -26,6 +26,7 @@ import io.renren.modules.spider.menu.entity.Line;
 import io.renren.modules.spider.one.entity.SpiderReference;
 import io.renren.modules.spider.one.service.LineService;
 import io.renren.modules.spider.one.service.SpiderReferenceService;
+import io.renren.modules.spider.oocl.service.ChildAccountService;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,12 @@ import java.util.Map;
 public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
 	@Autowired
 	private Scheduler scheduler;
-
+	@Autowired
+	LineService lineService;
+	@Autowired
+	SpiderReferenceService spiderReferenceService;
+	@Autowired
+	ChildAccountService childAccountService;
 	@Override
 	public PageData<ScheduleJobDTO> page(Map<String, Object> params) {
 		IPage<ScheduleJobEntity> page = baseDao.selectPage(
@@ -58,6 +64,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 	}
 
 	private QueryWrapper<ScheduleJobEntity> getWrapper(Map<String, Object> params){
+		//根据定时任务的type进行查询，0为one 1 oocl
 		String beanName = (String)params.get("beanName");
 		String type = (String)params.get("type");
 
@@ -67,10 +74,8 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 
 		return wrapper;
 	}
-	@Autowired
-	LineService lineService;
-	@Autowired
-	SpiderReferenceService spiderReferenceService;
+
+
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void save(DataFormDto dataFormDto) {
@@ -184,6 +189,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		entity.setRemark(dataFormDto.getRemark());
 		entity.setParams(JSONObject.toJSONString(params));
 		entity.setStatus(dataFormDto.getStatus());
+		entity.setType(dataFormDto.getType());
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         ScheduleUtils.updateScheduleJob(scheduler, entity);
         this.updateById(entity);
@@ -210,6 +216,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     }
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void save(OOCLDataFormDTO dataFormDto) {
 		ScheduleJobEntity entity = new ScheduleJobEntity();
 		Map<String, Object> paramsMap = new HashMap<>();
@@ -226,19 +233,34 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		paramsMap.put("token",dataFormDto.getToken());
 		paramsMap.put("startDate",dataFormDto.getStartDate());
 		paramsMap.put("endDate",dataFormDto.getEndDate());
+		paramsMap.put("childAccount",dataFormDto.getChildAccount());
 		paramsMap.put("type",dataFormDto.getType());
 		entity.setBeanName(dataFormDto.getBeanName());
 		entity.setCronExpression(dataFormDto.getCronExpression());
 		entity.setRemark(dataFormDto.getRemark());
-		entity.setType(dataFormDto.getType());
 		entity.setParams(JSONObject.toJSONString(paramsMap));
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
 		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
-		this.insert(entity);
+		entity.setType(dataFormDto.getType());
+		scheduleJobService.insert(entity);
+		paramsMap.put("id",entity.getId());
+		entity.setParams(JSONObject.toJSONString(paramsMap));
+		baseDao.updateById(entity);
+		//1 设置下单账号定时任务 存完之后 给子账号也存一张表 存子账号的cookie 和 token以及数据
+		// schedule_job 表 oocl line  id params  status    id params line id 删定时任务先删子表 然后主表
+		//1 先存 Line 表
+		Line line = new Line();
+		line.setJobId(entity.getId());
+		line.setParams(entity.getParams());
+		line.setOrderStatus(false);
+		lineService.save(line);
+		//2 存子账号 并且吧 每个子账号登录 获取 token,cookie
+		childAccountService.saveByUserList(dataFormDto.getChildAccount(),entity.getParams(),line.getId());
 		ScheduleUtils.createScheduleJob(scheduler, entity);
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void update(OOCLDataFormDTO dataFormDto) {
 		ScheduleJobEntity entity = new ScheduleJobEntity();
 		Map<String, Object> paramsMap = new HashMap<>();
@@ -255,13 +277,12 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		paramsMap.put("token",dataFormDto.getToken());
 		paramsMap.put("startDate",dataFormDto.getStartDate());
 		paramsMap.put("endDate",dataFormDto.getEndDate());
-		paramsMap.put("type",dataFormDto.getType());
+		paramsMap.put("childAccount",dataFormDto.getChildAccount());
 
 		entity.setId(dataFormDto.getId());
 		entity.setBeanName(dataFormDto.getBeanName());
 		entity.setCronExpression(dataFormDto.getCronExpression());
 		entity.setRemark(dataFormDto.getRemark());
-		entity.setType(dataFormDto.getType());
 		entity.setParams(JSONObject.toJSONString(paramsMap));
 		entity.setStatus(dataFormDto.getStatus());
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);

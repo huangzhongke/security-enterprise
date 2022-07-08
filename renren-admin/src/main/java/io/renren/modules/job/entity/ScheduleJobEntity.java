@@ -61,7 +61,7 @@ public class ScheduleJobEntity extends BaseEntity {
 	private Date updateDate;
 
 	/**
-	 *定时任务类型
+	 * 区分网站类型
 	 */
 	private Integer type;
 }

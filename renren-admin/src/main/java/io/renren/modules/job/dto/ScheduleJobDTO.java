@@ -61,6 +61,7 @@ public class ScheduleJobDTO implements Serializable {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Date createDate;
 
+    @ApiModelProperty(value = "区分是one还是oocl")
     private Integer type;
 
 }

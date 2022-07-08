@@ -21,6 +21,7 @@ import io.renren.modules.job.service.ScheduleJobService;
 import io.renren.modules.spider.one.dto.DataFormDto;
 import io.renren.modules.spider.one.service.LineService;
 import io.renren.modules.spider.oocl.dto.OOCLDataFormDTO;
+import io.renren.modules.spider.oocl.service.ChildAccountService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -47,6 +48,8 @@ public class ScheduleJobController {
 	@Autowired
 	private LineService lineService;
 
+	@Autowired
+	private ChildAccountService childAccountService;
 	@GetMapping("page")
 	@ApiOperation("分页")
 	@ApiImplicitParams({
@@ -142,6 +145,9 @@ public class ScheduleJobController {
 		if(scheduleJobDTO.getType() == 0){
 			lineService.deleteByScheduleJobIds(ids);
 
+		}
+		if (scheduleJobDTO.getType() == 1) {
+			lineService.deleteByJobIds(ids);
 		}
 		scheduleJobService.deleteBatch(ids);
 		return new Result();

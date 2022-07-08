@@ -39,8 +39,8 @@ public class Account implements Serializable {
     @ApiModelProperty(value = "网站起始IP")
     private String originalIp;
 
-    @ApiModelProperty(value = "分类")
-    private Integer type;
+    @ApiModelProperty(value = "是否为下单账号")
+    private Boolean orderAccount;
 
     @ApiModelProperty(value = "支付密码")
     private String payPassword;

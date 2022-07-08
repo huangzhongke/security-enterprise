@@ -1,0 +1,52 @@
+{
+  "booking": {
+    "currency": "USD",
+    "status": "created",
+    "moveType": "PortToPort",
+    "originalForms": false,
+    "loadType": "fcl",
+    "customerReference": "NB1BJB763900",
+    "bookingEnabled": false,
+    "fmc": false,
+    "acceptFmcTermsAndConditions": false,
+    "readFmcTermsAndConditions": false,
+    "hazardous": false,
+    "reefer": false,
+    "stackable": true,
+    "references": [
+      {
+        "displayName": "MOT Number",
+        "editableReadOnly": true,
+        "reference": "04823",
+        "referenceType": "branchCode"
+      },
+      {
+        "referenceType": "agent",
+        "reference": "NB1BJB763900",
+        "displayName": "Pre-Assigned Booking #",
+        "editableReadOnly": false
+      }
+    ],
+    "bookingItems": [
+      {
+        "airFlowUnit": "CubicMeters",
+        "containerDetail": "OFFICE CHAIR",
+        "containerType": "45G1",
+        "temperatureUnit": "celsius",
+        "weight": "16000",
+        "weightUnit": "KG",
+        "vgmUnit": "KG",
+        "bookingItemDetails": [
+          {
+            "commodityCode": "940330",
+            "description": "OFFICE FURNITURE, OF WOOD",
+            "distanceUnit": "cms",
+            "valueCurrency": "USD",
+            "volumeUnit": "CubicMeters",
+            "weightUnit": "KG"
+          }
+        ]
+      }
+    ]
+  }
+}

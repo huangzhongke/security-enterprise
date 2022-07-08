@@ -180,9 +180,12 @@ public class LoginUtils {
         return null;
     }
     public static Map<String, Object> Login(Map<String, Object> account,Boolean proxy){
-        ip = JSONObject.parseObject(account.get("ip").toString());
-        host = ip.get("host").toString();
-        port = (int) ip.get("port");
+        if(account.get("ip") != null){
+            ip = JSONObject.parseObject(account.get("ip").toString());
+            host = ip.get("host").toString();
+            port = (int) ip.get("port");
+        }
+
         isProxy = proxy;
         return getToken(account);
     }

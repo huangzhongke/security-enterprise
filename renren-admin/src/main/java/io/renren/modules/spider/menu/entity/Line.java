@@ -43,4 +43,6 @@ public class Line implements Serializable {
     @TableField("authorization")
     private String authorization;
 
+    @ApiModelProperty(value = "是否可以下单")
+    private Boolean orderStatus;
 }

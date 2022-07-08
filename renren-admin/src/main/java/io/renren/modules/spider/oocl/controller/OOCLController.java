@@ -61,7 +61,7 @@ public class OOCLController {
         accountMap.put("username",account.getUser());
         accountMap.put("password",account.getPassword());
         String agentIp = account.getAgentIp();
-        if (!agentIp.equals("")){
+        if (agentIp != null){
             isProxy = true;
             accountMap.put("ip",agentIp);
         }
@@ -75,8 +75,8 @@ public class OOCLController {
 
     @GetMapping("account")
     @RequiresPermissions("sys:schedule:all")
-    public Result getAccount(){
-        List<Account> list = accountService.getList();
+    public Result getAccount(@RequestParam Boolean isOrderAccount){
+        List<Account> list = accountService.getAccountListByIsOrderAccount(isOrderAccount);
         List<AccountVO> vo = ConvertUtils.sourceToTarget(list, AccountVO.class);
         return new Result<>().ok(vo);
     }

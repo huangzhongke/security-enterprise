@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.sys.dao.SysRegionDao">
+
+    <select id="getList" resultType="io.renren.modules.sys.entity.SysRegionEntity">
+        select * from sys_region
+        <where>
+            <if test="treeLevel != null">
+                tree_level = #{treeLevel}
+            </if>
+            <if test="pid != null and pid.trim() != ''">
+                pid = #{pid}
+            </if>
+        </where>
+        order by sort
+    </select>
+
+    <select id="getTreeList" resultType="map">
+        select id, pid, name from sys_region order by sort
+    </select>
+
+    <select id="getListByLevel" resultType="io.renren.modules.sys.entity.SysRegionEntity">
+        select id, pid, name from sys_region where level = #{value} order by sort
+    </select>
+
+    <select id="getById" resultType="io.renren.modules.sys.entity.SysRegionEntity">
+        select t1.*, (select t2.name from sys_region t2 where t2.id=t1.pid) parentName from sys_region t1 where t1.id = #{value}
+    </select>
+
+    <select id="getCountByPid" resultType="int">
+        select count(*) from sys_region where pid = #{value}
+    </select>
+
+</mapper>

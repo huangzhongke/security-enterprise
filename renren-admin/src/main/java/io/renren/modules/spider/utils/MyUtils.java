@@ -4,6 +4,7 @@ package io.renren.modules.spider.utils;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -92,5 +93,23 @@ public class MyUtils {
         }
 
         return json;
+    }
+
+    /**
+     *
+     * @param time yyyy-MM-dd HH:mm 只能传入该形式的日期
+     * @param pattern
+     * @return
+     */
+    public static String changeTimeFormat(String time,String pattern){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        Date date = null;
+        try {
+            date = simpleDateFormat.parse(time);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat(pattern);
+        return  simpleDateFormat2.format(date);
     }
 }

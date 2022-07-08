@@ -364,6 +364,8 @@ public class HuanJi implements ITask {
                         if (Float.parseFloat(temp.get("totalCost").toString()) < formParams.getPrice()) {
                             multiLegScheduleWithRate = legs.get(0);
                         }
+                    }else if(formParams.getEtdDays() == 0){
+                        multiLegScheduleWithRate = legs.get(0);
                     }
                 }
 

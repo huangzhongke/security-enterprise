@@ -1,5 +1,7 @@
 package io.renren.modules.spider.menu.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.renren.common.service.impl.BaseServiceImpl;
 import io.renren.modules.spider.menu.dao.AccountDao;
 import io.renren.modules.spider.menu.entity.Account;
@@ -23,4 +25,20 @@ public class AccountImpl extends BaseServiceImpl<AccountDao, Account> implements
     public List<Account> getList() {
         return baseDao.selectList(null);
     }
+
+    @Override
+    public Account getAccountByUserName(String userName) {
+        LambdaQueryWrapper<Account> lambda = new QueryWrapper<Account>().lambda();
+        lambda.eq(Account::getUser,userName);
+        return baseDao.selectOne(lambda);
+    }
+
+    @Override
+    public List<Account> getAccountListByIsOrderAccount(Boolean isOrderAccount) {
+        LambdaQueryWrapper<Account> lambda = new QueryWrapper<Account>().lambda();
+        lambda.eq(Account::getOrderAccount,isOrderAccount);
+        return baseDao.selectList(lambda);
+    }
+
+
 }

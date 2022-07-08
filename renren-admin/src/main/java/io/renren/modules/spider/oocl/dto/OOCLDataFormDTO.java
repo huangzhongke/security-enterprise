@@ -4,6 +4,7 @@ import io.renren.modules.spider.oocl.entity.OOCLPort;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author kee
@@ -31,5 +32,6 @@ public class OOCLDataFormDTO {
     private String token;
     private Date startDate;
     private Date endDate;
+    private List<String> childAccount;
     private Integer type;
 }

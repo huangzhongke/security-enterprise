@@ -1,0 +1,379 @@
+{
+  "order": {
+    "prodId": "8aaa47fb81d60adb0181d69339fb405f",
+    "prodType": "SAILING_PROD",
+    "sailingProdType": "P",
+    "tradeLaneCode": "AEC",
+    "channelCode": "GENERAL",
+    "cargoCategory": "GENERAL",
+    "orderItems": [
+      {
+        "itemType": "CNTR",
+        "cntrType": "20GP",
+        "quantity": 0,
+        "orderItemCharges": [
+          {
+            "chargeName": "海运费",
+            "chargeCode": null,
+            "chargeType": "OCEAN_FEE",
+            "price": 3950,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P"
+          },
+          {
+            "chargeName": "PSS - Peak Season Surcharge",
+            "chargeCode": "PSS",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454ef7205e3",
+            "price": 550,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "LSA - Low Sulphur Adjustment",
+            "chargeCode": "LSA",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa6f9581be7deb0181d307e70f01d6",
+            "price": 398,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "CAF - Currency Adjustment Factor",
+            "chargeCode": "CAF",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454d6870008",
+            "price": 0,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": true
+          },
+          {
+            "chargeName": "HSS - High Security Seal Charge",
+            "chargeCode": "HSS",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c3079c0442",
+            "price": 30,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "MHF - Manifest Handling Fee",
+            "chargeCode": "MHF",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c308ce049e",
+            "price": 20,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "EIR - Equipment Interchange Receipt (For PRC)",
+            "chargeCode": "EIR",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c306a703e2",
+            "price": 10,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "THC - Terminal Handling Charge at Origin",
+            "chargeCode": "THC",
+            "chargeType": "THC",
+            "chargeHisId": "8aaaa40c7d8f1520017d939a6037003b",
+            "price": 728,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          }
+        ],
+        "cargoValue": 0
+      },
+      {
+        "itemType": "CNTR",
+        "cntrType": "40GP",
+        "quantity": 1,
+        "orderItemCharges": [
+          {
+            "chargeName": "海运费",
+            "chargeCode": null,
+            "chargeType": "OCEAN_FEE",
+            "price": 7450,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P"
+          },
+          {
+            "chargeName": "PSS - Peak Season Surcharge",
+            "chargeCode": "PSS",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454ef7205e3",
+            "price": 1100,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "LSA - Low Sulphur Adjustment",
+            "chargeCode": "LSA",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa6f9581be7deb0181d307e70f01d6",
+            "price": 796,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "CAF - Currency Adjustment Factor",
+            "chargeCode": "CAF",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454d6870008",
+            "price": 0,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": true
+          },
+          {
+            "chargeName": "HSS - High Security Seal Charge",
+            "chargeCode": "HSS",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c3079c0442",
+            "price": 30,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "MHF - Manifest Handling Fee",
+            "chargeCode": "MHF",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c308ce049e",
+            "price": 40,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "EIR - Equipment Interchange Receipt (For PRC)",
+            "chargeCode": "EIR",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c306a703e2",
+            "price": 10,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "THC - Terminal Handling Charge at Origin",
+            "chargeCode": "THC",
+            "chargeType": "THC",
+            "chargeHisId": "8aaaa40c7d8f1520017d939a6037003b",
+            "price": 1014,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          }
+        ]
+      },
+      {
+        "itemType": "CNTR",
+        "cntrType": "40HQ",
+        "quantity": 0,
+        "orderItemCharges": [
+          {
+            "chargeName": "海运费",
+            "chargeCode": null,
+            "chargeType": "OCEAN_FEE",
+            "price": 7450,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P"
+          },
+          {
+            "chargeName": "PSS - Peak Season Surcharge",
+            "chargeCode": "PSS",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454ef7205e3",
+            "price": 1100,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "LSA - Low Sulphur Adjustment",
+            "chargeCode": "LSA",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa6f9581be7deb0181d307e70f01d6",
+            "price": 796,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "CAF - Currency Adjustment Factor",
+            "chargeCode": "CAF",
+            "chargeType": "CNTR_OCEAN",
+            "chargeHisId": "8aaa16c27d94459b017d9454d6870008",
+            "price": 0,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": true
+          },
+          {
+            "chargeName": "HSS - High Security Seal Charge",
+            "chargeCode": "HSS",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c3079c0442",
+            "price": 30,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "MHF - Manifest Handling Fee",
+            "chargeCode": "MHF",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c308ce049e",
+            "price": 40,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "EIR - Equipment Interchange Receipt (For PRC)",
+            "chargeCode": "EIR",
+            "chargeType": "THC",
+            "chargeHisId": "8aaa9f4d7d8f15d6017d93c306a703e2",
+            "price": 10,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "THC - Terminal Handling Charge at Origin",
+            "chargeCode": "THC",
+            "chargeType": "THC",
+            "chargeHisId": "8aaaa40c7d8f1520017d939a6037003b",
+            "price": 1014,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          }
+        ],
+        "cargoValue": 0
+      },
+      {
+        "itemType": "BL",
+        "quantity": 1,
+        "orderItemCharges": [
+          {
+            "chargeName": "AMS - Advance Manifest Security Charge",
+            "chargeCode": "AMS",
+            "chargeType": "CUS",
+            "chargeHisId": "8aaa797a7e8c1bab017e9ae9d0450102",
+            "price": 30,
+            "currency": "USD",
+            "toCurrency": "USD",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "DOC - Outbound Documentation Fee",
+            "chargeCode": "DOC",
+            "chargeType": "DOC",
+            "chargeHisId": "8aaa16c27d94459b017d97dc6f9c0818",
+            "price": 450,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": false
+          },
+          {
+            "chargeName": "PEF - Payable Elsewhere Fee",
+            "chargeCode": "PEF",
+            "chargeType": "DOC",
+            "chargeHisId": "8aaa16c27d94459b017d97dc71130868",
+            "price": 0,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": true
+          },
+          {
+            "chargeName": "FHF - Freight Handling Fee",
+            "chargeCode": "FHF",
+            "chargeType": "DOC",
+            "chargeHisId": "8aaa16c27d94459b017d97dc7091084a",
+            "price": 0,
+            "currency": "CNY",
+            "toCurrency": "CNY",
+            "transitPortId": null,
+            "paymentTermsType": "P",
+            "include": true
+          }
+        ]
+      }
+    ],
+    "trailerServices": [],
+    "transferServices": [],
+    "paymentInfo": {},
+    "coupon": {},
+    "reeferValueAddServices": []
+  },
+  "orderPromotionUsageParam": [],
+  "operations": [],
+  "fmcBookingParam": {}
+}

@@ -1,0 +1,111 @@
+[
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "461802935876821"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "461802935876533"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "461802935875555"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "461802935876494"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "2080417729820134"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  {
+    "channelCode": "GENERAL",
+    "prodType": "P",
+    "startDate": "2022-07-12 00:00",
+    "cargoCategory": "GENERAL",
+    "porCityIds": [
+      "461802935876564"
+    ],
+    "fndCityIds": [
+      "2425733099773629"
+    ],
+    "page": 1,
+    "size": 10
+  },
+  "1":[
+  {
+    "account": [
+      1
+    ],
+    "isVesselName": false,
+    "vesselNum": 1,
+    "action": true,
+    "sleepTime": 3200,
+    "vessels": [
+      {
+        "times": 1,
+        "successAccount": [],
+        "vesselName": "OOCL CALIVFORNIA125",
+        "type": [
+          {
+            "cntrType": "40HQ",
+            "price": 99900,
+            "number": 1
+          }
+        ]
+      }
+    ]
+  }
+]
+]

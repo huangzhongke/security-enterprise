@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.notice.dao.SysNoticeUserDao">
+    <insert id="insertAllUser">
+        insert into sys_notice_user(notice_id, receiver_id, read_status)
+            select #{noticeId}, t1.id, #{readStatus} from sys_user t1
+    </insert>
+
+    <select id="getUnReadNoticeCount" resultType="int">
+        select count(*) from sys_notice_user where receiver_id = #{value} and read_status = 0
+    </select>
+
+</mapper>

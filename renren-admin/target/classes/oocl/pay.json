@@ -1,0 +1,13 @@
+{
+  "accountInfo": {
+    "payWay": "PREPAID",
+    "password": "JaAO/IzG8Yos+rgjfpTAoxjAQ67tH9yoIcMw+QthQaRwfdA9RhXkqM+339HGmlbN4O3tHli2aTGl2tZP5+QejwCtNqAubMKWPrzejRNwK8m2s7otzjcAET+7+O0zteQiFZSPDfbZPtkT8jwGpIG2cTOMBhNcVKvl3x4jW4Z68NLiZO+YqLYskcsGX+SoVwMBNBx9RdKruF28e+LfI5tDzEOE6d7tXwMnmatDVbTo4J/KAy+B1RgW9X+kN7hneyehQJKEOP31qQF0ftnaBu7ETfm+LZdTQylg/WqgNKlmyoGf/4Zf1y/v3EAhsVwSivlk902ewLed/HWUOI2ctPCnBA==",
+    "unionPayType": "COMPANY",
+    "scac": "OOLU"
+  },
+  "sailingProdOrderInfo": {
+    "paymentOrderType": "SAILING_PROD",
+    "orderNo": "E00265536",
+    "amount": 1544
+  }
+}
