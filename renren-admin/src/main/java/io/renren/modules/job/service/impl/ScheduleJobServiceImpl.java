@@ -113,7 +113,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		entity.setParams(JSONObject.toJSONString(params));
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
 		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
-		entity.setType(dataFormDto.getType());
+		//entity.setType(dataFormDto.getType());
         this.insert(entity);
 		//2 存 子表 spider_line
 		Line line = new Line();
@@ -235,6 +235,8 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
 		//ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
 		entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
 		this.insert(entity);
+		//如果是下单账号先存spider_line表
+		//在存关系表
 		ScheduleUtils.createScheduleJob(scheduler, entity);
 	}
 

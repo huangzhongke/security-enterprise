@@ -31,5 +31,5 @@ public class OOCLDataFormDTO {
     private String token;
     private Date startDate;
     private Date endDate;
-    private Integer type;
+    private Boolean type;
 }
