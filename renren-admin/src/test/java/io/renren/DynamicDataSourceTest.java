@@ -11,10 +11,7 @@ package io.renren;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import io.renren.modules.spider.menu.entity.Account;
-import io.renren.modules.spider.one.dao.LineDao;
-import io.renren.modules.spider.oocl.dao.ChildAccountDao;
 import io.renren.modules.spider.menu.service.AccountService;
-import io.renren.modules.spider.oocl.entity.ChildAccount;
 import io.renren.modules.spider.utils.MyUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,13 +31,12 @@ import java.util.Map;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DynamicDataSourceTest {
 
-
     @Autowired
     AccountService accountService;
 
     @Test
     public void test(){
-        String s = MyUtils.readJsonFile("account3.json");
+        String s = MyUtils.readJsonFile("account.json");
         List<Map<String, Object>> accountList = JSONObject.parseObject(s, new TypeReference<List<Map<String, Object>>>() {
         });
         for (Map<String, Object> map : accountList) {
@@ -58,16 +54,4 @@ public class DynamicDataSourceTest {
 
     }
 
-    @Autowired
-    ChildAccountDao childAccountDao;
-
-
-    @Autowired
-    LineDao lineDao;
-    @Test
-    public void t1(){
-        String agentIp = "123";
-        boolean isProxy = agentIp == null ? false : true;
-        System.out.println(isProxy);
-    }
 }
