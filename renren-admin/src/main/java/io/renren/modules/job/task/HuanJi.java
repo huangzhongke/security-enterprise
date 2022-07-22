@@ -326,46 +326,46 @@ public class HuanJi implements ITask {
                     //  获取变量
                     List<Map<String, Object>> legs = JSONObject.parseObject(temp.get("legs").toString(), new TypeReference<List<Map<String, Object>>>() {
                     });
-
+                    Map<String, Object> leg = legs.get(0);
 //                   未显示的航班，过滤掉
-                    List<Map<String, Object>> issues = JSONObject.parseObject(legs.get(0).get("issues").toString(), new TypeReference<List<Map<String, Object>>>() {
+                    List<Map<String, Object>> issues = JSONObject.parseObject(leg.get("issues").toString(), new TypeReference<List<Map<String, Object>>>() {
                     });
                     if (issues.size() > 0) {
                         continue;
                     }
 //                   禁止下单的航班过滤掉
-                    if (Boolean.parseBoolean(legs.get(0).get("isSoldOut").toString())) {
+                    if (Boolean.parseBoolean(leg.get("isSoldOut").toString())) {
                         continue;
                     }
                     if (formParams.getIsNeedSupplierName()) {
-                        if (!formParams.getSupplierName().equals(legs.get(0).get("supplierName").toString())) {
+                        if (!formParams.getSupplierName().equals(leg.get("supplierName").toString())) {
                             continue;
                         }
                     }
                     if (formParams.getIsNeedLineName()) {
-                        if (!(formParams.getVesselName().equals(legs.get(0).get("vesselName")) && formParams.getVoyage().equals(legs.get(0).get("voyage")))) {
+                        if (!(formParams.getVesselName().equals(leg.get("vesselName")) && formParams.getVoyage().equals(leg.get("voyage")))) {
                             continue;
                         }
                     }
                     //                   判断航线条件
                     if (formParams.getEtdDays() != 0 && formParams.getPrice() != 0) {
 //                       即判断时间，也判断价格
-                        if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(legs.get(0).get("etd").toString()))
+                        if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(leg.get("etd").toString()))
                                 && Float.parseFloat(temp.get("totalCost").toString()) < formParams.getPrice()) {
-                            multiLegScheduleWithRate = legs.get(0);
+                            multiLegScheduleWithRate = leg;
                         }
                     } else if (formParams.getEtdDays() != 0) {
                         //                  判断时间是否大于orderedDate起始时间
                         if (MyUtils.dateCompare(dateFormat.parse(orderedDate), dateFormat.parse(legs.get(0).get("etd").toString()))) {
-                            multiLegScheduleWithRate = legs.get(0);
+                            multiLegScheduleWithRate = leg;
                         }
                     } else if (formParams.getPrice() != 0) {
                         //                       根据钱作为判断,小于满足条件的价格
                         if (Float.parseFloat(temp.get("totalCost").toString()) < formParams.getPrice()) {
-                            multiLegScheduleWithRate = legs.get(0);
+                            multiLegScheduleWithRate = leg;
                         }
                     }else if(formParams.getEtdDays() == 0){
-                        multiLegScheduleWithRate = legs.get(0);
+                        multiLegScheduleWithRate = leg;
                     }
                 }
 

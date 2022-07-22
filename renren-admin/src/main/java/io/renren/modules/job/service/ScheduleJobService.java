@@ -13,8 +13,10 @@ import io.renren.common.service.BaseService;
 import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.entity.ScheduleJobEntity;
 import io.renren.modules.spider.one.dto.DataFormDto;
+import io.renren.modules.spider.oocl.dto.MonitorDTO;
 import io.renren.modules.spider.oocl.dto.OOCLDataFormDTO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,6 +49,16 @@ public interface ScheduleJobService extends BaseService<ScheduleJobEntity> {
 	 * 更新OOCL定时任务
 	 */
 	void update(OOCLDataFormDTO dto);
+
+	/**
+	 * 保存OOCL 监控器定时任务
+	 */
+	void save(MonitorDTO dto);
+
+	/**
+	 * 更新OOCL 监控器定时任务
+	 */
+	void update(MonitorDTO dto);
 	
 	/**
 	 * 批量删除定时任务

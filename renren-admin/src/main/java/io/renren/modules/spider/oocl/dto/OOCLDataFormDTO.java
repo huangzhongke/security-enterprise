@@ -33,5 +33,7 @@ public class OOCLDataFormDTO {
     private Date startDate;
     private Date endDate;
     private List<String> childAccount;
+    private Boolean isNeedVesselName;
     private Integer type;
+    private Boolean isColdType;
 }

@@ -186,10 +186,13 @@ public class HttpUtils {
             get.setConfig(requestConfig);
 
             //			添加头
-            for (String key : headers.keySet()) {
+            if (headers != null){
+                for (String key : headers.keySet()) {
 //				System.out.println("key= "+ key + " and value= " + params.get(key));
-                get.addHeader(key, headers.get(key));
+                    get.addHeader(key, headers.get(key));
+                }
             }
+
             get.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36");
             get.addHeader("Content-Type", "application/json; charset=UTF-8");
             get.addHeader("Accept", "application/json");

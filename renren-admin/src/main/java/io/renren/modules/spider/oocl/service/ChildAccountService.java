@@ -10,10 +10,9 @@ public interface ChildAccountService extends BaseService<ChildAccount> {
     /**
      *
      * @param userList 子账号列表
-     * @param params 下单账号搜寻参数
      * @param lineId 下单航线id
      */
-    void saveByUserList(List<String> userList, String params,Long lineId);
+    void saveByUserList(List<String> userList,Long lineId);
 
     /**
      *
@@ -23,4 +22,6 @@ public interface ChildAccountService extends BaseService<ChildAccount> {
     List<Long> getIdsByLineID(Long lineId);
 
     List<ChildAccount> getListByLineId(Long lineId);
+
+    void deleteByLineId(Long lineId);
 }

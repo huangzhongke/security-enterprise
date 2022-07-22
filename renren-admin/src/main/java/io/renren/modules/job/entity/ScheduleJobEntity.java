@@ -63,5 +63,5 @@ public class ScheduleJobEntity extends BaseEntity {
 	/**
 	 * 区分网站类型
 	 */
-	private Boolean type;
+	private Integer type;
 }

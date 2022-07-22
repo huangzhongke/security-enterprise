@@ -11,9 +11,10 @@ import java.io.Serializable;
 public class ChildAccount implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
-    private String params;
+    private String username;
     private Long lineId;
     private String cookie;
     private String token;
     private String ip;
+    private Boolean status;
 }

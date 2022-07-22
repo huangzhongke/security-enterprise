@@ -20,8 +20,11 @@ import io.renren.modules.job.dto.ScheduleJobDTO;
 import io.renren.modules.job.service.ScheduleJobService;
 import io.renren.modules.spider.one.dto.DataFormDto;
 import io.renren.modules.spider.one.service.LineService;
+import io.renren.modules.spider.oocl.dto.MonitorDTO;
 import io.renren.modules.spider.oocl.dto.OOCLDataFormDTO;
+import io.renren.modules.spider.oocl.entity.MonitorData;
 import io.renren.modules.spider.oocl.service.ChildAccountService;
+import io.renren.modules.spider.oocl.service.MonitorDataService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -31,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,7 +53,7 @@ public class ScheduleJobController {
 	private LineService lineService;
 
 	@Autowired
-	private ChildAccountService childAccountService;
+	MonitorDataService monitorDataService;
 	@GetMapping("page")
 	@ApiOperation("分页")
 	@ApiImplicitParams({
@@ -80,6 +84,7 @@ public class ScheduleJobController {
 			dataFormDto.setRemark(schedule.getRemark());
 			dataFormDto.setStatus(schedule.getStatus());
 			dataFormDto.setId(schedule.getId());
+			dataFormDto.setType(schedule.getType());
 			return new Result<DataFormDto>().ok(dataFormDto);
 		}
 		if (schedule.getType() == 1) {
@@ -90,7 +95,19 @@ public class ScheduleJobController {
 			dataFormDTO.setRemark(schedule.getRemark());
 			dataFormDTO.setStatus(schedule.getStatus());
 			dataFormDTO.setId(schedule.getId());
+			dataFormDTO.setType(schedule.getType());
 			return new Result<OOCLDataFormDTO>().ok(dataFormDTO);
+		}
+		if (schedule.getType() == 3) {
+			MonitorDTO monitorDTO = JSONObject.parseObject(schedule.getParams(), MonitorDTO.class);
+			monitorDTO.setBeanName(schedule.getBeanName());
+			monitorDTO.setParams(schedule.getParams());
+			monitorDTO.setCronExpression(schedule.getCronExpression());
+			monitorDTO.setRemark(schedule.getRemark());
+			monitorDTO.setStatus(schedule.getStatus());
+			monitorDTO.setId(schedule.getId());
+			monitorDTO.setType(schedule.getType());
+			return new Result<MonitorDTO>().ok(monitorDTO);
 		}
 
 		return new Result<>();
@@ -112,6 +129,11 @@ public class ScheduleJobController {
 			ValidatorUtils.validateEntity(dataFormDTO, AddGroup.class, DefaultGroup.class);
 			scheduleJobService.save(dataFormDTO);
 		}
+		if (params.get("tag").equals("monitor")){
+			MonitorDTO monitorDTO = JSONObject.parseObject(params.get("data").toString(), MonitorDTO.class);
+			ValidatorUtils.validateEntity(monitorDTO, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.save(monitorDTO);
+		}
 		return new Result();
 	}
 
@@ -131,6 +153,11 @@ public class ScheduleJobController {
 			ValidatorUtils.validateEntity(dataFormDTO, AddGroup.class, DefaultGroup.class);
 			scheduleJobService.update(dataFormDTO);
 		}
+		if (params.get("tag").equals("monitor")){
+			MonitorDTO monitorDTO = JSONObject.parseObject(params.get("data").toString(), MonitorDTO.class);
+			ValidatorUtils.validateEntity(monitorDTO, AddGroup.class, DefaultGroup.class);
+			scheduleJobService.update(monitorDTO);
+		}
 		
 		return new Result();
 	}
@@ -148,6 +175,9 @@ public class ScheduleJobController {
 		}
 		if (scheduleJobDTO.getType() == 1) {
 			lineService.deleteByJobIds(ids);
+		}
+		if (scheduleJobDTO.getType() == 3) {
+			monitorDataService.deleteByJobIds(ids);
 		}
 		scheduleJobService.deleteBatch(ids);
 		return new Result();
